@@ -1088,7 +1088,7 @@ class Collect:
         return data['img'], data['target'].astype(np.float32), data['target_weight'].astype(np.float32), {
             'imgId': meta['img_id'],
             'annId': '',
-            'imgPath': 'image_file',
+            'imgPath': meta['image_file'],
             'center': meta['center'],
             'scale': meta['scale'],
             'joints': meta['joints_3d'], # ? 

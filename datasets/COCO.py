@@ -159,6 +159,7 @@ class COCODataset(Dataset):
 
             if self.use_gt_bboxes:
                 objs = self.coco.loadAnns(ann_ids)
+                # print(objs[0].keys()) # dict_keys(['segmentation', 'num_keypoints', 'area', 'iscrowd', 'keypoints', 'image_id', 'bbox', 'category_id', 'id'])
 
                 # sanitize bboxes
                 valid_objs = []
@@ -385,6 +386,7 @@ class COCODataset(Dataset):
         if 'test' not in self.data_version:
             info_str = self._do_python_keypoint_eval(res_file)
             name_value = OrderedDict(info_str)
+            print('in COCODataset eval', name_value.keys())
             return name_value, name_value['AP']
         else:
             return {'Null': 0}, 0

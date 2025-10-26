@@ -235,7 +235,8 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
 
         return accs, avg_acc, cnt, joints_preds, joints_target
     
-    def evaluate(self, outputs, res_folder, metric='mAP', **kwargs):
+    # def evaluate(self, outputs, res_folder, metric='mAP', **kwargs):
+    def evaluate(self, predictions, bounding_boxes, image_paths, res_folder, metric='mAP', **kwargs):
         """Evaluate coco keypoint results. The pose prediction results will be
         saved in `${res_folder}/result_keypoints.json`.
 
@@ -271,25 +272,36 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
         res_file = os.path.join(res_folder, 'result_keypoints.json')
 
         kpts = defaultdict(list)
+        
+        # for output in outputs:
+        #     preds = output['preds']
+        #     boxes = output['boxes']
+        #     image_paths = output['image_paths']
+        #     bbox_ids = output['bbox_ids']
 
-        for output in outputs:
-            preds = output['preds']
-            boxes = output['boxes']
-            image_paths = output['image_paths']
-            bbox_ids = output['bbox_ids']
+        #     batch_size = len(image_paths)
+        #     for i in range(batch_size):
+        #         image_id = self.name2id[image_paths[i][len(self.img_prefix):]]
+        #         kpts[image_id].append({
+        #             'keypoints': preds[i],
+        #             'center': boxes[i][0:2],
+        #             'scale': boxes[i][2:4],
+        #             'area': boxes[i][4],
+        #             'score': boxes[i][5],
+        #             'image_id': image_id,
+        #             'bbox_id': bbox_ids[i]
+        #         })
+        _kpts = []
+        for idx, kpt in enumerate(predictions):
+            _kpts.append({
+                'keypoints': kpt,
+                'center': bounding_boxes[idx][0:2],
+                'scale': bounding_boxes[idx][2:4],
+                'area': bounding_boxes[idx][4],
+                'score': bounding_boxes[idx][5],
+                'image': int(image_paths[idx][-16:-4])
+            })
 
-            batch_size = len(image_paths)
-            for i in range(batch_size):
-                image_id = self.name2id[image_paths[i][len(self.img_prefix):]]
-                kpts[image_id].append({
-                    'keypoints': preds[i],
-                    'center': boxes[i][0:2],
-                    'scale': boxes[i][2:4],
-                    'area': boxes[i][4],
-                    'score': boxes[i][5],
-                    'image_id': image_id,
-                    'bbox_id': bbox_ids[i]
-                })
         kpts = self._sort_and_unique_bboxes(kpts)
 
         # rescoring and oks nms
@@ -324,10 +336,7 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
 
         info_str = self._do_python_keypoint_eval(res_file)
         name_value = OrderedDict(info_str)
-
-        print('name_value in evaluate()', name_value.keys())
-        exit()
-        return name_value
+        return name_value, name_value['AP']
 
     def _write_coco_keypoint_results(self, keypoints, res_file):
         """Write results into a json file."""
