@@ -150,7 +150,6 @@ if __name__ == '__main__':
     #     print(target.shape)
     #     print(target_weight.shape)
     #     print(joints_data.keys())
-
     #     break
 
 
@@ -165,7 +164,6 @@ if __name__ == '__main__':
     #     print(target.shape)
     #     print(target_weight.shape)
     #     print(joints_data.keys())
-
     #     break
         
     main(**args.__dict__)
