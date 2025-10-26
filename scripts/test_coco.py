@@ -139,33 +139,33 @@ if __name__ == '__main__':
     from torch.utils.data import DataLoader
 
     
-    print('----train')
-    val_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
+    # print('----train')
+    # val_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
+    #                     data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
 
-    val_dl = DataLoader(val_ds, batch_size=2)
+    # val_dl = DataLoader(val_ds, batch_size=2)
 
-    for image, target, target_weight, joints_data in val_dl:
-        print(image.shape)
-        print(target.shape)
-        print(target_weight.shape)
-        print(joints_data.keys())
+    # for image, target, target_weight, joints_data in val_dl:
+    #     print(image.shape)
+    #     print(target.shape)
+    #     print(target_weight.shape)
+    #     print(joints_data.keys())
 
-        break
+    #     break
 
 
-    print('----val')
-    val_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                            data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
+    # print('----val')
+    # val_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
+    #                         data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
 
-    val_dl = DataLoader(val_ds, batch_size=2)
+    # val_dl = DataLoader(val_ds, batch_size=2)
 
-    for image, target, target_weight, joints_data in val_dl:
-        print(image.shape)
-        print(target.shape)
-        print(target_weight.shape)
-        print(joints_data.keys())
+    # for image, target, target_weight, joints_data in val_dl:
+    #     print(image.shape)
+    #     print(target.shape)
+    #     print(target_weight.shape)
+    #     print(joints_data.keys())
 
-        break
+    #     break
         
     main(**args.__dict__)

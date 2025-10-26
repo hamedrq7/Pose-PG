@@ -285,7 +285,7 @@ class Test(object):
         print('\nVal AP/AR')
         
         val_acc, mean_mAP_val = self.ds_test.evaluate(
-            all_preds[0:idx], all_boxes[0:idx], image_paths[0:idx], res_folder='/')
+            all_preds, all_boxes, image_paths, res_folder='/')
         print('val_acc', val_acc, 'mean_mAP_val', mean_mAP_val)
 
     def run(self):
