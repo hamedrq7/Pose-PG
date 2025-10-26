@@ -1095,6 +1095,7 @@ class Collect:
             'joints_visibility': meta['joints_3d_visible'], # ? 
             'rotation': meta['rotation'],
             'score': meta['bbox_score'], # ? 
+            'bbox_id': meta['bbox_id']
         }
 
     def __repr__(self):

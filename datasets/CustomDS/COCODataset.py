@@ -273,6 +273,18 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
 
         kpts = defaultdict(list)
         
+        for i in range(predictions.shape[0]):
+            image_id = self.name2id[image_paths[i][len(self.img_prefix):]]
+            kpts[image_id].append({
+                'keypoints': predictions[i], 
+                'center': bounding_boxes[i][0:2],
+                'scale': bounding_boxes[i][2:4],
+                'area': bounding_boxes[i][4],
+                'score': bounding_boxes[i][5],
+                'image_id': image_id,
+                'bbox_id': bounding_boxes[i][6], 
+            })
+            
         # for output in outputs:
         #     preds = output['preds']
         #     boxes = output['boxes']
@@ -291,16 +303,6 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
         #             'image_id': image_id,
         #             'bbox_id': bbox_ids[i]
         #         })
-        _kpts = []
-        for idx, kpt in enumerate(predictions):
-            _kpts.append({
-                'keypoints': kpt,
-                'center': bounding_boxes[idx][0:2],
-                'scale': bounding_boxes[idx][2:4],
-                'area': bounding_boxes[idx][4],
-                'score': bounding_boxes[idx][5],
-                'image': int(image_paths[idx][-16:-4])
-            })
 
         kpts = self._sort_and_unique_bboxes(kpts)
 

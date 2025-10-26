@@ -143,6 +143,82 @@ class Test(object):
         self.mean_loss_test = 0.
         self.mean_acc_test = 0.
 
+    def _test(self):
+        num_samples = len(self.dl_test)
+        all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
+        all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
+        image_paths = []
+        idx = 0
+        self.model.eval()
+
+        with torch.no_grad():
+            for step, (image, target, target_weight, joints_data) in enumerate(tqdm(self.dl_test)):
+                image = image.to(self.device)
+                target = target.to(self.device)
+                target_weight = target_weight.to(self.device)
+
+                output = self.model(image)
+                print('output.shape', output.shape)
+                print('target.shape', target.shape)
+                if self.flip_test_images:
+                    image_flipped = flip_tensor(image, dim=-1)
+                    output_flipped = self.model(image_flipped)
+
+                    output_flipped = flip_back(output_flipped, self.ds_test.flip_pairs)
+
+                    output = (output + output_flipped) * 0.5
+
+                loss = self.loss_fn(output, target, target_weight)
+
+                # Evaluate accuracy
+                # Get predictions on the input
+                accs, avg_acc, cnt, joints_preds, joints_target = \
+                    self.ds_test.evaluate_accuracy(output, target)
+
+                num_images = image.shape[0]
+
+                # measure elapsed time
+                c = joints_data['center'].numpy()
+                s = joints_data['scale'].numpy()
+                score = joints_data['score'].numpy()
+                pixel_std = 200  # ToDo Parametrize this
+                bbox_id = joints_data['bbox_id'].numpy()
+
+                preds, maxvals = get_final_preds(True, output, c, s,
+                                                 pixel_std)  # ToDo check what post_processing exactly does
+
+                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2].detach().cpu().numpy()
+                all_preds[idx:idx + num_images, :, 2:3] = maxvals.detach().cpu().numpy()
+                # double check this all_boxes parts
+                all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
+                all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
+                all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
+                all_boxes[idx:idx + num_images, 5] = score
+                all_boxes[idx:idx + num_images, 6] = bbox_id
+                
+                image_paths.extend(joints_data['imgPath'])
+
+                idx += num_images
+
+                self.mean_loss_test += loss.item()
+                self.mean_acc_test += avg_acc.item()
+
+                if step == 0:
+                    save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'])
+
+                if step >= 3:
+                    break
+
+        self.mean_loss_test /= self.len_dl_test
+        self.mean_acc_test /= self.len_dl_test
+
+        print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
+        print('\nVal AP/AR')
+        print(all_preds[:idx], all_boxes[:idx])
+        val_acc, mean_mAP_val = self.ds_test.evaluate( # evaluate_overall_accuracy
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder='/')
+        print('val_acc', val_acc, 'mean_mAP_val', mean_mAP_val)
+
     # def _test(self):
     #     num_samples = len(self.dl_test)
     #     all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
@@ -158,8 +234,8 @@ class Test(object):
     #             target_weight = target_weight.to(self.device)
 
     #             output = self.model(image)
-    #             print('output.shape', output.shape)
-    #             print('target.shape', target.shape)
+    #             # print('output.shape', output.shape)
+    #             # print('target.shape', target.shape)
     #             if self.flip_test_images:
     #                 image_flipped = flip_tensor(image, dim=-1)
     #                 output_flipped = self.model(image_flipped)
@@ -203,8 +279,7 @@ class Test(object):
     #             if step == 0:
     #                 save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'])
 
-    #             if step >= 3:
-    #                 break
+
 
     #     self.mean_loss_test /= self.len_dl_test
     #     self.mean_acc_test /= self.len_dl_test
@@ -212,81 +287,9 @@ class Test(object):
     #     print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
     #     print('\nVal AP/AR')
         
-    #     val_acc, mean_mAP_val = self.dl_test.evaluate_overall_accuracy(
-    #         all_preds, all_boxes, image_paths, output_dir=self.log_path)
+    #     val_acc, mean_mAP_val = self.ds_test.evaluate(
+    #         all_preds, all_boxes, image_paths, res_folder='/')
     #     print('val_acc', val_acc, 'mean_mAP_val', mean_mAP_val)
-
-    def _test(self):
-        num_samples = len(self.dl_test)
-        all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
-        all_boxes = np.zeros((num_samples, 6), dtype=np.float32)
-        image_paths = []
-        idx = 0
-        self.model.eval()
-
-        with torch.no_grad():
-            for step, (image, target, target_weight, joints_data) in enumerate(tqdm(self.dl_test)):
-                image = image.to(self.device)
-                target = target.to(self.device)
-                target_weight = target_weight.to(self.device)
-
-                output = self.model(image)
-                # print('output.shape', output.shape)
-                # print('target.shape', target.shape)
-                if self.flip_test_images:
-                    image_flipped = flip_tensor(image, dim=-1)
-                    output_flipped = self.model(image_flipped)
-
-                    output_flipped = flip_back(output_flipped, self.ds_test.flip_pairs)
-
-                    output = (output + output_flipped) * 0.5
-
-                loss = self.loss_fn(output, target, target_weight)
-
-                # Evaluate accuracy
-                # Get predictions on the input
-                accs, avg_acc, cnt, joints_preds, joints_target = \
-                    self.ds_test.evaluate_accuracy(output, target)
-
-                num_images = image.shape[0]
-
-                # measure elapsed time
-                c = joints_data['center'].numpy()
-                s = joints_data['scale'].numpy()
-                score = joints_data['score'].numpy()
-                pixel_std = 200  # ToDo Parametrize this
-
-                preds, maxvals = get_final_preds(True, output, c, s,
-                                                 pixel_std)  # ToDo check what post_processing exactly does
-
-                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2].detach().cpu().numpy()
-                all_preds[idx:idx + num_images, :, 2:3] = maxvals.detach().cpu().numpy()
-                # double check this all_boxes parts
-                all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
-                all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
-                all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
-                all_boxes[idx:idx + num_images, 5] = score
-                image_paths.extend(joints_data['imgPath'])
-
-                idx += num_images
-
-                self.mean_loss_test += loss.item()
-                self.mean_acc_test += avg_acc.item()
-
-                if step == 0:
-                    save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'])
-
-
-
-        self.mean_loss_test /= self.len_dl_test
-        self.mean_acc_test /= self.len_dl_test
-
-        print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
-        print('\nVal AP/AR')
-        
-        val_acc, mean_mAP_val = self.ds_test.evaluate(
-            all_preds, all_boxes, image_paths, res_folder='/')
-        print('val_acc', val_acc, 'mean_mAP_val', mean_mAP_val)
 
     def run(self):
         """

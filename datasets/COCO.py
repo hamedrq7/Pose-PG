@@ -345,7 +345,7 @@ class COCODataset(Dataset):
                 'score': bounding_boxes[idx][5],
                 'image': int(image_paths[idx][-16:-4])
             })
-
+        
         # image x person x (keypoints)
         kpts = defaultdict(list)
         for kpt in _kpts:
