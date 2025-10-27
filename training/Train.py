@@ -150,6 +150,14 @@ class Train(object):
 
         
         os.makedirs(log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting        
+        #
+        # write all experiment parameters in parameters.txt and in tensorboard text field
+        self.parameters = [x + ': ' + str(y) + '\n' for x, y in locals().items()]
+        with open(os.path.join(self.log_path, 'parameters.txt'), 'w') as fd:
+            fd.writelines(self.parameters)
+        if self.use_tensorboard:
+            self.summary_writer.add_text('parameters', '\n'.join(self.parameters))
+
         sys.stdout = Logger("{}/{}/run.log".format(log_path, exp_name))
         command_line_args = sys.argv
         command = " ".join(command_line_args)
@@ -159,13 +167,6 @@ class Train(object):
 
 
 
-        #
-        # write all experiment parameters in parameters.txt and in tensorboard text field
-        self.parameters = [x + ': ' + str(y) + '\n' for x, y in locals().items()]
-        with open(os.path.join(self.log_path, 'parameters.txt'), 'w') as fd:
-            fd.writelines(self.parameters)
-        if self.use_tensorboard:
-            self.summary_writer.add_text('parameters', '\n'.join(self.parameters))
 
         #
         # load model
