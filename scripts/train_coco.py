@@ -11,6 +11,7 @@ import torch
 sys.path.insert(1, os.getcwd())
 from datasets.COCO import COCODataset
 from training.COCO import COCOTrain
+from misc.log_utils import Logger
 
 def main(exp_name,
          epochs=210,
@@ -38,6 +39,11 @@ def main(exp_name,
          # coco_bbox_path=None,
          seed=1,
          device=None):
+
+    sys.stdout = Logger("{}/run.log".format(log_path))
+    command_line_args = sys.argv
+    command = " ".join(command_line_args)
+    print(f"The command that ran this script: {command}")
 
     # Seeds
     random.seed(seed)

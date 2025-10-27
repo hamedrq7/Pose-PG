@@ -179,6 +179,8 @@ class Train(object):
                 print('Pre-trained weights missing keys:', missing_keys)
                 print('Pre-trained weights unexpected keys:', unexpected_keys)
 
+        self.model = self.model.to(self.device)
+        
         # load previous checkpoint
         if self.checkpoint_path is not None:
             print('Loading checkpoint %s...' % self.checkpoint_path)
@@ -190,7 +192,6 @@ class Train(object):
                                                                                        self.device)
         else:
             self.starting_epoch = 0
-
 
         #
         # define loss and optimizers

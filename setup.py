@@ -23,11 +23,15 @@ os.makedirs("./datasets/COCO", exist_ok=True)
 # COCO dataset
 coco_val_zip = "./downloads/val2017.zip"
 coco_train_zip = "./downloads/train2017.zip"
+coco_annotation = "./downloads/annotations_trainval2017.zip.zip"
 
 download_file("http://images.cocodataset.org/zips/val2017.zip", coco_val_zip)
 run(f"unzip -q -n {coco_val_zip} -d ./datasets/COCO")  # -n: don't overwrite
 
 download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
+run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+
+download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_train_zip)
 run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
 
 # Model weights
