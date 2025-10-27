@@ -180,7 +180,7 @@ class Test(object):
                 s = joints_data['scale'].numpy()
                 score = joints_data['score'].numpy()
                 pixel_std = 200  # ToDo Parametrize this
-                # bbox_id = joints_data['bbox_id'].numpy()
+                bbox_id = joints_data['bbox_id'].numpy()
 
                 preds, maxvals = get_final_preds(True, output, c, s,
                                                  pixel_std)  # ToDo check what post_processing exactly does
@@ -192,7 +192,7 @@ class Test(object):
                 all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
                 all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
                 all_boxes[idx:idx + num_images, 5] = score
-                # all_boxes[idx:idx + num_images, 6] = bbox_id
+                all_boxes[idx:idx + num_images, 6] = bbox_id
                 
                 image_paths.extend(joints_data['imgPath'])
 

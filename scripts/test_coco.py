@@ -68,8 +68,8 @@ def main(exp_name,
     #     heatmap_sigma=2,
     # )
 
-    # from datasets.CustomDS.COCODataset import TopDownCocoDataset
-    # import datasets.CustomDS.COCO_configs as COCO_configs
+    from datasets.CustomDS.COCODataset import TopDownCocoDataset
+    import datasets.CustomDS.COCO_configs as COCO_configs
 
     ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
                         data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info)

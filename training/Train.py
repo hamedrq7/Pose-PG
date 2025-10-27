@@ -14,7 +14,7 @@ from misc.checkpoint import save_checkpoint, load_checkpoint
 from misc.utils import flip_tensor, flip_back
 from misc.visualization import save_images
 from models_.hrnet import HRNet
-
+from models_.poseresnet import PoseResNet
 
 class Train(object):
     """
@@ -46,6 +46,7 @@ class Train(object):
                  checkpoint_path=None,
                  log_path='./logs',
                  use_tensorboard=True,
+                 model_name='poseresnet',
                  model_c=48,
                  model_nof_joints=17,
                  model_bn_momentum=0.1,
@@ -127,6 +128,7 @@ class Train(object):
         self.checkpoint_path = checkpoint_path
         self.log_path = os.path.join(log_path, self.exp_name)
         self.use_tensorboard = use_tensorboard
+        self.model_name = model_name
         self.model_c = model_c
         self.model_nof_joints = model_nof_joints
         self.model_bn_momentum = model_bn_momentum
@@ -158,8 +160,37 @@ class Train(object):
 
         #
         # load model
-        self.model = HRNet(c=self.model_c, nof_joints=self.model_nof_joints,
-                           bn_momentum=self.model_bn_momentum).to(self.device)
+        if self.model_name == 'hrnet':
+            self.model = HRNet(c=self.model_c, nof_joints=self.model_nof_joints,
+                            bn_momentum=self.model_bn_momentum).to(self.device)
+        elif self.model_name == 'poseresnet':
+            self.model = PoseResNet(resnet_size=self.model_c, nof_joints=self.model_nof_joints, 
+                            bn_momentum=self.model_bn_momentum)
+
+        # load pre-trained weights (such as those pre-trained on imagenet)
+        if self.pretrained_weight_path is not None:
+            print(f'Using {self.pretrained_weight_path} as pre-trained weights')
+            missing_keys, unexpected_keys = self.model.load_state_dict(
+                torch.load(self.pretrained_weight_path, map_location=self.device),
+                strict=False  # strict=False is required to load models pre-trained on imagenet
+            )
+            print('Pre-trained weights loaded.')
+            if len(missing_keys) > 0 or len(unexpected_keys) > 0:
+                print('Pre-trained weights missing keys:', missing_keys)
+                print('Pre-trained weights unexpected keys:', unexpected_keys)
+
+        # load previous checkpoint
+        if self.checkpoint_path is not None:
+            print('Loading checkpoint %s...' % self.checkpoint_path)
+            if os.path.isdir(self.checkpoint_path):
+                path = os.path.join(self.checkpoint_path, 'checkpoint_last.pth')
+            else:
+                path = self.checkpoint_path
+            self.starting_epoch, self.model, self.optim, self.params = load_checkpoint(path, self.model, self.optim,
+                                                                                       self.device)
+        else:
+            self.starting_epoch = 0
+
 
         #
         # define loss and optimizers
@@ -178,30 +209,6 @@ class Train(object):
         else:
             raise NotImplementedError
 
-        #
-        # load pre-trained weights (such as those pre-trained on imagenet)
-        if self.pretrained_weight_path is not None:
-            missing_keys, unexpected_keys = self.model.load_state_dict(
-                torch.load(self.pretrained_weight_path, map_location=self.device),
-                strict=False  # strict=False is required to load models pre-trained on imagenet
-            )
-            print('Pre-trained weights loaded.')
-            if len(missing_keys) > 0 or len(unexpected_keys) > 0:
-                print('Pre-trained weights missing keys:', missing_keys)
-                print('Pre-trained weights unexpected keys:', unexpected_keys)
-
-        #
-        # load previous checkpoint
-        if self.checkpoint_path is not None:
-            print('Loading checkpoint %s...' % self.checkpoint_path)
-            if os.path.isdir(self.checkpoint_path):
-                path = os.path.join(self.checkpoint_path, 'checkpoint_last.pth')
-            else:
-                path = self.checkpoint_path
-            self.starting_epoch, self.model, self.optim, self.params = load_checkpoint(path, self.model, self.optim,
-                                                                                       self.device)
-        else:
-            self.starting_epoch = 0
 
         if lr_decay:
             self.lr_scheduler = MultiStepLR(self.optim, list(self.lr_decay_steps), gamma=self.lr_decay_gamma,

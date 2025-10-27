@@ -1,0 +1,2 @@
+Standard Pretrained r50: https://download.pytorch.org/models/resnet50-0676ba61.pth
+Adversarially pretrained r50: https://www.dropbox.com/scl/fi/26946dfqwwx88ts0ybqjc/cifar_linf_8.pt?rlkey=jrguoqdgo395jp2f27ob2e6pq&st=lpfdv0r0&dl=0 

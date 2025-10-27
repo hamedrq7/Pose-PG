@@ -35,6 +35,7 @@ class COCOTrain(Train):
                  checkpoint_path=None,
                  log_path='./logs',
                  use_tensorboard=True,
+                 model_name='poseresnet',
                  model_c=48,
                  model_nof_joints=17,
                  model_bn_momentum=0.1,
@@ -112,6 +113,7 @@ class COCOTrain(Train):
             checkpoint_path=checkpoint_path,
             log_path=log_path,
             use_tensorboard=use_tensorboard,
+            model_name=model_name,
             model_c=model_c,
             model_nof_joints=model_nof_joints,
             model_bn_momentum=model_bn_momentum,
@@ -123,7 +125,7 @@ class COCOTrain(Train):
 
         num_samples = self.len_dl_train * self.batch_size
         all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
-        all_boxes = np.zeros((num_samples, 6), dtype=np.float32)
+        all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
         image_paths = []
         idx = 0
 
@@ -156,6 +158,7 @@ class COCOTrain(Train):
             s = joints_data['scale'].numpy()
             score = joints_data['score'].numpy()
             pixel_std = 200  # ToDo Parametrize this
+            bbox_id = joints_data['bbox_id'].numpy()
 
             # Get predictions on the original imagee
             preds, maxvals = get_final_preds(True, output.detach(), c, s,
@@ -167,6 +170,8 @@ class COCOTrain(Train):
             all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
             all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
             all_boxes[idx:idx + num_images, 5] = score
+            all_boxes[idx:idx + num_images, 6] = bbox_id
+
             image_paths.extend(joints_data['imgPath'])
 
             idx += num_images
@@ -185,13 +190,13 @@ class COCOTrain(Train):
 
         # COCO evaluation
         print('\nTrain AP/AR')
-        self.train_accs, self.mean_mAP_train = self.ds_train.evaluate_overall_accuracy(
-            all_preds, all_boxes, image_paths, output_dir=self.log_path)
+        self.train_accs, self.mean_mAP_train = self.ds_train.evaluate(
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
 
     def _val(self):
         num_samples = len(self.ds_val)
         all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
-        all_boxes = np.zeros((num_samples, 6), dtype=np.float32)
+        all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
         image_paths = []
         idx = 0
         self.model.eval()
@@ -226,6 +231,7 @@ class COCOTrain(Train):
                 s = joints_data['scale'].numpy()
                 score = joints_data['score'].numpy()
                 pixel_std = 200  # ToDo Parametrize this
+                bbox_id = joints_data['bbox_id'].numpy()
 
                 preds, maxvals = get_final_preds(True, output, c, s,
                                                  pixel_std)  # ToDo check what post_processing exactly does
@@ -237,6 +243,8 @@ class COCOTrain(Train):
                 all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
                 all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
                 all_boxes[idx:idx + num_images, 5] = score
+                all_boxes[idx:idx + num_images, 6] = bbox_id
+
                 image_paths.extend(joints_data['imgPath'])
 
                 idx += num_images
@@ -258,5 +266,5 @@ class COCOTrain(Train):
 
         # COCO evaluation
         print('\nVal AP/AR')
-        self.val_accs, self.mean_mAP_val = self.ds_val.evaluate_overall_accuracy(
-            all_preds, all_boxes, image_paths, output_dir=self.log_path)
+        self.val_accs, self.mean_mAP_val = self.ds_val.evaluate(
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)

@@ -1,5 +1,16 @@
 import torch
 from torch import nn
+
+
+import os 
+import sys 
+# relative import hacks (sorry)
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)  # for bash user
+os.chdir(parentdir)  # for pycharm user
+
 from models_.modules import BasicBlock, Bottleneck
 
 
@@ -193,12 +204,12 @@ if __name__ == '__main__':
     # model = HRNet(48, 17, 0.1)
     model = HRNet(32, 17, 0.1)
 
-    # print(model)
+    print(model)
 
-    model.load_state_dict(
-        # torch.load('./weights/pose_hrnet_w48_384x288.pth')
-        torch.load('./weights/pose_hrnet_w32_256x192.pth')
-    )
+    # model.load_state_dict(
+    #     # torch.load('./weights/pose_hrnet_w48_384x288.pth')
+    #     torch.load('./weights/pose_hrnet_w32_256x192.pth')
+    # )
     print('ok!!')
 
     if torch.cuda.is_available() and False:
@@ -214,3 +225,6 @@ if __name__ == '__main__':
     y = model(torch.ones(1, 3, 384, 288).to(device))
     print(y.shape)
     print(torch.min(y).item(), torch.mean(y).item(), torch.max(y).item())
+
+    from torchinfo import summary
+    summary(model, (1, 3, 384, 288))

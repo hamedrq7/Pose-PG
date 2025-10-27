@@ -230,7 +230,7 @@ COCO_train_pipeline = [
     LoadImageFromFile(),
     TopDownRandomFlip(flip_prob=0.5), 
     TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3),
-    TopDownGetRandomScaleRotation(rot_factor=40, scale_factor=0.5), 
+    TopDownGetRandomScaleRotation(rot_factor=40, scale_factor=0.3), 
     TopDownAffine(),
     ToTensor(), 
     NormalizeTensor(
@@ -245,7 +245,7 @@ COCO_train_pipeline = [
         # 
         meta_keys=[
             'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
-            'rotation', 'bbox_score', 'flip_pairs'
+            'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
         ]
     ),
 ]
