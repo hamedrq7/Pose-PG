@@ -146,8 +146,16 @@ class Train(object):
 
         print(self.device)
 
+        
+        os.makedirs(log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting        
+        sys.stdout = Logger("{}/{}/run.log".format(log_path, exp_name))
+        command_line_args = sys.argv
+        command = " ".join(command_line_args)
+        print(f"The command that ran this script: {command}")
         if self.use_tensorboard:
             self.summary_writer = tb.SummaryWriter(self.log_path)
+
+
 
         #
         # write all experiment parameters in parameters.txt and in tensorboard text field

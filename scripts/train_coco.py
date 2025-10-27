@@ -40,11 +40,6 @@ def main(exp_name,
          seed=1,
          device=None):
     
-    os.makedirs(log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting        
-    sys.stdout = Logger("{}/{}/run.log".format(log_path, exp_name))
-    command_line_args = sys.argv
-    command = " ".join(command_line_args)
-    print(f"The command that ran this script: {command}")
     
     # Seeds
     random.seed(seed)
