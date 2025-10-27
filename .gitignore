@@ -12,6 +12,7 @@ build/
 develop-eggs/
 dist/
 downloads/
+datasets/COCO
 eggs/
 .eggs/
 lib/
