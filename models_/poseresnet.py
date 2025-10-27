@@ -167,5 +167,5 @@ if __name__ == '__main__':
 
     # from torchinfo import summary
     # summary(resnet, (1, 3, 256, 192))
-
+    from training.Train import load_pretrained
     model = load_pretrained(pretrained_weight_path, device)

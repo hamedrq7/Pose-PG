@@ -22,17 +22,32 @@ os.makedirs("./datasets/COCO", exist_ok=True)
 
 # COCO dataset
 coco_val_zip = "./downloads/val2017.zip"
+coco_val_extract_dir = "./datasets/COCO/val2017"  
+
 coco_train_zip = "./downloads/train2017.zip"
+coco_train_extract_dir = "./datasets/COCO/train2017"  
+
 coco_annotation = "./downloads/annotations_trainval2017.zip.zip"
+coco_annotation_extract_dir = "./datasets/COCO/annotations"  
 
 download_file("http://images.cocodataset.org/zips/val2017.zip", coco_val_zip)
-run(f"unzip -q -n {coco_val_zip} -d ./datasets/COCO")  # -n: don't overwrite
+if not os.path.exists(coco_val_extract_dir):
+    run(f"unzip -q -n {coco_val_zip} -d ./datasets/COCO")  # -n: don't overwrite
+else:
+    print(f"Skipping unzip — found existing directory: {coco_val_extract_dir}")
 
 download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
-run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+if not os.path.exists(coco_train_extract_dir):
+    run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+else:
+    print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
 
 download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_annotation)
-run(f"unzip -q -n {coco_annotation} -d ./datasets/COCO")
+if not os.path.exists(coco_annotation_extract_dir):
+    run(f"unzip -q -n {coco_annotation} -d ./datasets/COCO")
+else:
+    print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
+
 
 # Model weights
 download_file(
