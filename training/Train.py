@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 
 import tensorboardX as tb
@@ -15,6 +16,7 @@ from misc.utils import flip_tensor, flip_back
 from misc.visualization import save_images
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
+from misc.log_utils import Logger 
 
 class Train(object):
     """
