@@ -214,7 +214,7 @@ class Train(object):
             self.model = PoseResNet(resnet_size=self.model_c, nof_joints=self.model_nof_joints, 
                             bn_momentum=self.model_bn_momentum)
 
-        self.model = load_pretrained(model, self.pretrained_weight_path, device=self.device)
+        self.model = load_pretrained(self.model, self.pretrained_weight_path, device=self.device)
         self.model = self.model.to(self.device)
 
         # load previous checkpoint
