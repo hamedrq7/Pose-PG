@@ -31,8 +31,8 @@ run(f"unzip -q -n {coco_val_zip} -d ./datasets/COCO")  # -n: don't overwrite
 download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
 run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
 
-download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_train_zip)
-run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_annotation)
+run(f"unzip -q -n {coco_annotation} -d ./datasets/COCO")
 
 # Model weights
 download_file(

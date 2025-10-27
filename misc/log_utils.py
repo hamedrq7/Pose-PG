@@ -4,6 +4,12 @@ import shutil
 import sys
 import time
 
+
+def make_dir(path_to_save):
+    if not os.path.exists(path_to_save):
+        os.makedirs(path_to_save)
+
+
 # https://stackoverflow.com/questions/14906764/how-to-redirect-stdout-to-both-file-and-console-with-scripting
 class Logger(object):
     def __init__(self, filename, mode="a"):

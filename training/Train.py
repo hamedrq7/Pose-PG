@@ -146,7 +146,6 @@ class Train(object):
 
         print(self.device)
 
-        os.makedirs(self.log_path, 0o755, exist_ok=False)  # exist_ok=False to avoid overwriting
         if self.use_tensorboard:
             self.summary_writer = tb.SummaryWriter(self.log_path)
 
@@ -180,7 +179,7 @@ class Train(object):
                 print('Pre-trained weights unexpected keys:', unexpected_keys)
 
         self.model = self.model.to(self.device)
-        
+
         # load previous checkpoint
         if self.checkpoint_path is not None:
             print('Loading checkpoint %s...' % self.checkpoint_path)
