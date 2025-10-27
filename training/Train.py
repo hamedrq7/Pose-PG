@@ -18,6 +18,44 @@ from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from misc.log_utils import Logger 
 
+def load_pretrained(model, pretrained_weight_path, device):
+    checkpoint = torch.load(pretrained_weight_path, map_location=device, weights_only=False)
+    
+    #### TODO [ ]
+    ####### From robustbench: 
+    # https://github.com/RobustBench/robustbench/blob/master/robustbench/model_zoo/imagenet.py
+    
+    #### HRNET REPO, standard r50
+    # resnet50 from https://drive.google.com/drive/folders/1E6j6W7RqGhW1o7UHgiQ9X4g8fVJRU9TX
+    # Its from the hrnet repo: https://github.com/leoxiaobin/deep-high-resolution-net.pytorch/tree/master
+    # pretrained_weight_path = 'C:/Users/hamed/Downloads/resnet50-19c8e357.pth'
+
+    ### The models from MadyLab are a bit weird 
+    if 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'schedule' in checkpoint.keys() and 'epoch' in checkpoint.keys() and len(checkpoint.keys()) == 4: 
+        # https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1
+
+        state_dict = checkpoint["model"]
+
+        # Remove "module.model." prefix
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            if "attacker" not in k: 
+                new_key = k.replace("module.model.", "")
+                new_state_dict[new_key] = v
+                # print(k, new_key)
+    
+    missing_keys, unexpected_keys = model.load_state_dict(
+        # torch.load(pretrained_weight_path, map_location=device, weights_only = False),
+        new_state_dict,
+        strict=False,  # strict=False is required to load models pre-trained on imagenet
+    )
+    print('Pre-trained weights loaded.')
+    if len(missing_keys) > 0 or len(unexpected_keys) > 0:
+        print('Pre-trained weights missing keys:', missing_keys)
+        print('Pre-trained weights unexpected keys:', unexpected_keys)
+
+    return model 
+
 class Train(object):
     """
     Train  class.
@@ -176,18 +214,7 @@ class Train(object):
             self.model = PoseResNet(resnet_size=self.model_c, nof_joints=self.model_nof_joints, 
                             bn_momentum=self.model_bn_momentum)
 
-        # load pre-trained weights (such as those pre-trained on imagenet)
-        if self.pretrained_weight_path is not None:
-            print(f'Using {self.pretrained_weight_path} as pre-trained weights')
-            missing_keys, unexpected_keys = self.model.load_state_dict(
-                torch.load(self.pretrained_weight_path, map_location=self.device),
-                strict=False  # strict=False is required to load models pre-trained on imagenet
-            )
-            print('Pre-trained weights loaded.')
-            if len(missing_keys) > 0 or len(unexpected_keys) > 0:
-                print('Pre-trained weights missing keys:', missing_keys)
-                print('Pre-trained weights unexpected keys:', unexpected_keys)
-
+        self.model = load_pretrained(model, self.pretrained_weight_path, device=self.device)
         self.model = self.model.to(self.device)
 
         # load previous checkpoint

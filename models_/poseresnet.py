@@ -133,6 +133,8 @@ class PoseResNet(nn.Module):
         return x
 
 
+
+
 if __name__ == '__main__':
 
     model = PoseResNet(50, 17, 0.1)
@@ -150,48 +152,20 @@ if __name__ == '__main__':
 
     print(device)
 
-    model = model.to(device)
-    print(model)
+    # model = model.to(device)
+    # print(model)
     # from torchinfo import summary
     # summary(model, (1, 3, 256, 192))
 
-    #### HRNET REPO, standard r50
-    # resnet50 from https://drive.google.com/drive/folders/1E6j6W7RqGhW1o7UHgiQ9X4g8fVJRU9TX
-    # Its from the hrnet repo: https://github.com/leoxiaobin/deep-high-resolution-net.pytorch/tree/master
-    # pretrained_weight_path = 'C:/Users/hamed/Downloads/resnet50-19c8e357.pth'
-    
-    #### MadryLab, adversarially trained 
-    # # https://github.com/MadryLab/robustness
-    # # https://www.dropbox.com/scl/fi/g4ssqr5lp2k9uq43vcxjd/cifar_linf_8.pt?rlkey=nhus782d7bmvvjtgxiqgn1dne&e=1&dl=0
-    # # C:/Users/hamed/Downloads/resnet50-19c8e357.pth
-    pretrained_weight_path = 'C:/Users/hamed/Downloads/resnet50-19c8e357.pth'
-
-    ####### From robustbench: 
-    # https://github.com/RobustBench/robustbench/blob/master/robustbench/model_zoo/imagenet.py
-    
+    pretrained_weight_path = 'C:/Users/hamed/Downloads/imagenet_linf_8.pt'
     
     #### From torchvission, standard r50
     # from torchvision.models import resnet50, ResNet50_Weights
-
     # # Using pretrained weights:
     # # resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
     # # resnet50(weights="IMAGENET1K_V1")
 
-    # # Using no weights:
-    # resnet = resnet50(weights=None)
-    # # resnet50()
-    # print(resnet)
-
     # from torchinfo import summary
     # summary(resnet, (1, 3, 256, 192))
 
-    
-    missing_keys, unexpected_keys = model.load_state_dict(
-        torch.load(pretrained_weight_path, map_location=device, weights_only = False),
-        strict=False,  # strict=False is required to load models pre-trained on imagenet
-    )
-    print('Pre-trained weights loaded.')
-    if len(missing_keys) > 0 or len(unexpected_keys) > 0:
-        print('Pre-trained weights missing keys:', missing_keys)
-        print('Pre-trained weights unexpected keys:', unexpected_keys)
-
+    model = load_pretrained(pretrained_weight_path, device)

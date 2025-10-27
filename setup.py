@@ -41,8 +41,8 @@ download_file(
 )
 
 # Dropbox link with direct download enabled
-dropbox_url = "https://www.dropbox.com/scl/fi/26946dfqwwx88ts0ybqjc/cifar_linf_8.pt?rlkey=jrguoqdgo395jp2f27ob2e6pq&st=lpfdv0r0&dl=1"
-download_file(dropbox_url, "./downloads/adversarial_resnet50.pth")
+dropbox_url = "https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1"
+download_file(dropbox_url, "./downloads/madry_adversarial_resnet50.pt")
 
 # Install dependencies
 if os.path.exists("requirements.txt"):
