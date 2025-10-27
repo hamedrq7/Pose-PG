@@ -149,7 +149,7 @@ class Train(object):
         print(self.device)
 
         
-        os.makedirs(log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting        
+        os.makedirs(log_path, 0o755, exist_ok=False)  # exist_ok=False to avoid overwriting        
         #
         # write all experiment parameters in parameters.txt and in tensorboard text field
         self.parameters = [x + ': ' + str(y) + '\n' for x, y in locals().items()]
@@ -164,8 +164,6 @@ class Train(object):
         print(f"The command that ran this script: {command}")
         if self.use_tensorboard:
             self.summary_writer = tb.SummaryWriter(self.log_path)
-
-
 
 
         #
