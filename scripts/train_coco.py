@@ -156,7 +156,7 @@ if __name__ == '__main__':
     parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
     # parser.add_argument("--coco_root_path", help="COCO dataset root path", type=str, default="./datasets/COCO")
     # parser.add_argument("--coco_bbox_path", help="path of detected bboxes to use during evaluation",
-                        type=str, default=None)
+    #                     type=str, default=None)
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     args = parser.parse_args()
