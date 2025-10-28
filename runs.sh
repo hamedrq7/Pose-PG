@@ -1,1 +1,8 @@
-python scripts/train_coco.py --model_c 50 --log_path '../exps/Madry adversarial R50' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50.pt'
+python scripts/train_coco.py --lr 0.001--epochs 3 --lr_decay_steps '(2)' --model_c 50 --log_path '../exps/Madry adversarial R50 w Sigma=3 lr 001' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50.pt'
+python scripts/train_coco.py --lr 0.01--epochs 3 --lr_decay_steps '(2)' --model_c 50 --log_path '../exps/Madry adversarial R50 w Sigma=3 lr 01' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50.pt'
+python scripts/train_coco.py --lr 0.0005--epochs 3 --lr_decay_steps '(2)' --model_c 50 --log_path '../exps/Madry adversarial R50 w Sigma=3 lr 0005' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50.pt'
+python scripts/train_coco.py --lr 0.005--epochs 3 --lr_decay_steps '(2)' --model_c 50 --log_path '../exps/Madry adversarial R50 w Sigma=3 lr 0.05' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50.pt'
+
+
+
+# python scripts/train_coco.py --model_c 50 --log_path '../exps/Madry adversarial R50 w Sigma=3' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50.pt'

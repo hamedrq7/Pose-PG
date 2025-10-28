@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from datasets.HumanPoseEstimation import HumanPoseEstimationDataset
 from losses.loss import JointsMSELoss, JointsOHKMMSELoss
-from misc.checkpoint import save_checkpoint, load_checkpoint
+from misc.checkpoint import save_checkpoint, load_checkpoint, save_results
 from misc.utils import flip_tensor, flip_back
 from misc.visualization import save_images
 from models_.hrnet import HRNet
@@ -255,7 +255,7 @@ class Train(object):
 
         # load train and val datasets
         self.dl_train = DataLoader(self.ds_train, batch_size=self.batch_size, shuffle=True,
-                                   num_workers=self.num_workers, drop_last=True)
+                                   num_workers=self.num_workers, drop_last=False)
         self.len_dl_train = len(self.dl_train)
 
         # dl_val = DataLoader(self.ds_val, batch_size=1, shuffle=False, num_workers=num_workers)
@@ -263,15 +263,24 @@ class Train(object):
         self.len_dl_val = len(self.dl_val)
 
         # initialize variables
-        self.mean_loss_train = 0.
-        self.mean_acc_train = 0.
-        self.mean_loss_val = 0.
-        self.mean_acc_val = 0.
-        self.mean_mAP_val = 0.
+        # self.mean_loss_train = 0.
+        # self.mean_acc_train = 0.
+        # self.mean_loss_val = 0.
+        # self.mean_acc_val = 0.
+        # self.mean_mAP_val = 0.
 
         self.best_loss = None
         self.best_acc = None
         self.best_mAP = None
+
+        self.loss_train_list = [] # 
+        self.loss_val_list = [] # 
+        self.acc_train_list = [] # 
+        self.acc_val_list = [] # 
+        self.mAP_train_list = [] # 
+        self.mAP_val_list = [] # 
+        self.APs_train_list = [] # 
+        self.APs_val_list = [] # 
 
     def _train(self):
         self.model.train()
@@ -355,22 +364,23 @@ class Train(object):
         print('\nValidation: Loss %f - Accuracy %f' % (self.mean_loss_val, self.mean_acc_val))
 
     def _checkpoint(self):
-
+        save_results(os.path.join(self.log_path, 'results.npz'), self.acc_train_list, self.loss_train_list, self.mAP_train_list, self.APs_train_list, self.acc_val_list, self.loss_val_list, self.mAP_val_list, self.APs_val_list)
+        
         save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_last.pth'), epoch=self.epoch + 1, model=self.model,
                         optimizer=self.optim, params=self.parameters)
 
-        if self.best_loss is None or self.best_loss > self.mean_loss_val:
-            self.best_loss = self.mean_loss_val
+        if self.best_loss is None or self.best_loss > self.loss_val_list[-1]:
+            self.best_loss = self.self.loss_val_list[-1]
             print('best_loss %f at epoch %d' % (self.best_loss, self.epoch + 1))
             save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_best_loss.pth'), epoch=self.epoch + 1,
                             model=self.model, optimizer=self.optim, params=self.parameters)
-        if self.best_acc is None or self.best_acc < self.mean_acc_val:
-            self.best_acc = self.mean_acc_val
+        if self.best_acc is None or self.best_acc < self.acc_val_list[-1]:
+            self.best_acc = self.acc_val_list[-1]
             print('best_acc %f at epoch %d' % (self.best_acc, self.epoch + 1))
             save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_best_acc.pth'), epoch=self.epoch + 1,
                             model=self.model, optimizer=self.optim, params=self.parameters)
-        if self.best_mAP is None or self.best_mAP < self.mean_mAP_val:
-            self.best_mAP = self.mean_mAP_val
+        if self.best_mAP is None or self.best_mAP < self.mAP_val_list[-1]:
+            self.best_mAP = self.mAP_val_list[-1]
             print('best_mAP %f at epoch %d' % (self.best_mAP, self.epoch + 1))
             save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_best_mAP.pth'), epoch=self.epoch + 1,
                             model=self.model, optimizer=self.optim, params=self.parameters)
@@ -386,11 +396,11 @@ class Train(object):
         for self.epoch in range(self.starting_epoch, self.epochs):
             print('\nEpoch %d of %d @ %s' % (self.epoch + 1, self.epochs, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
-            self.mean_loss_train = 0.
-            self.mean_loss_val = 0.
-            self.mean_acc_train = 0.
-            self.mean_acc_val = 0.
-            self.mean_mAP_val = 0.
+            # self.mean_loss_train = 0.
+            # self.mean_loss_val = 0.
+            # self.mean_acc_train = 0.
+            # self.mean_acc_val = 0.
+            # self.mean_mAP_val = 0.
 
             #
             # Train

@@ -122,6 +122,8 @@ class COCOTrain(Train):
         )
 
     def _train(self):
+        running_loss = 0.0
+        running_acc = 0.0
 
         num_samples = self.len_dl_train * self.batch_size
         all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
@@ -176,7 +178,6 @@ class COCOTrain(Train):
 
             idx += num_images
 
-            self.mean_loss_train += loss.item()
             if self.use_tensorboard:
                 self.summary_writer.add_scalar('train_loss', loss.item(),
                                                global_step=step + self.epoch * self.len_dl_train)
@@ -186,23 +187,35 @@ class COCOTrain(Train):
                     save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'],
                                 self.summary_writer, step=step + self.epoch * self.len_dl_train, prefix='train_')
 
-            print('train_loss', loss.item())
-            print('train_acc', avg_acc.item())
+            # print('train_loss', loss.item())
+            # print('train_acc', avg_acc.item())
+            running_acc += avg_acc.item()
+            running_loss += loss.item()
 
-        self.mean_loss_train /= len(self.dl_train)
+        self.loss_train_list.append(running_loss / len(self.dl_train))
+        self.acc_train_list.append(running_acc / len(self.dl_train))
 
         # COCO evaluation
         print('\nTrain AP/AR')
-        self.train_accs, self.mean_mAP_train = self.ds_train.evaluate(
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        all_APs, mAP = self.ds_train.evaluate(
+            all_preds, all_boxes, image_paths, res_folder=self.log_path)
+        
+        self.mAP_train_list.append(mAP)
+        self.APs_train_list.append(all_APs)
+
+        print(f'Ep{self.epoch} - Train Acc: {self.acc_train_list[-1]:.3f} | Loss: {self.acc_train_list[-1]:.5f} | AP: {self.mAP_train_list[-1]:.3f}')
 
     def _val(self):
+        running_loss = 0.0
+        running_acc = 0.0 
+
         num_samples = len(self.ds_val)
         all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
         all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
         image_paths = []
         idx = 0
         self.model.eval()
+
         with torch.no_grad():
             for step, (image, target, target_weight, joints_data) in enumerate(tqdm(self.dl_val, desc='Validating')):
                 image = image.to(self.device)
@@ -252,8 +265,6 @@ class COCOTrain(Train):
 
                 idx += num_images
 
-                self.mean_loss_val += loss.item()
-                self.mean_acc_val += avg_acc.item()
                 if self.use_tensorboard:
                     self.summary_writer.add_scalar('val_loss', loss.item(),
                                                    global_step=step + self.epoch * self.len_dl_val)
@@ -264,13 +275,20 @@ class COCOTrain(Train):
                                     joints_data['joints_visibility'], self.summary_writer,
                                     step=step + self.epoch * self.len_dl_val, prefix='val_')
 
-                print('val_loss', loss.item())
-                print('val_acc', avg_acc.item())
-                
-        self.mean_loss_val /= len(self.dl_val)
-        self.mean_acc_val /= len(self.dl_val)
+                # print('val_loss', loss.item())
+                # print('val_acc', avg_acc.item())
+                running_acc += avg_acc.item()
+                running_loss += loss.item()
+
+        self.loss_val_list.append(running_loss / len(self.dl_val))
+        self.acc_val_list.append(running_acc / len(self.dl_val))
 
         # COCO evaluation
         print('\nVal AP/AR')
-        self.val_accs, self.mean_mAP_val = self.ds_val.evaluate(
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        all_APs, mAP = self.ds_val.evaluate(
+            all_preds, all_boxes, image_paths, res_folder=self.log_path)
+
+        self.mAP_val_list.append(mAP)
+        self.APs_val_list.append(all_APs)
+
+        print(f'Ep{self.epoch} - Val Acc: {self.acc_val_list[-1]:.3f} | Loss: {self.loss_val_list[-1]:.5f} | AP: {self.mAP_val_list[-1]:.3f}')
