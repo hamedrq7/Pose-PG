@@ -236,7 +236,7 @@ COCO_train_pipeline = [
     NormalizeTensor(
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]),
-    TopDownGenerateTarget(sigma=2), 
+    TopDownGenerateTarget(sigma=3), 
     Collect(
         keys=['img', 'target', 'target_weight'],
         # meta_keys=[
@@ -259,7 +259,7 @@ COCO_val_pipeline = [
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]
         ),
-    TopDownGenerateTarget(sigma=2), 
+    TopDownGenerateTarget(sigma=3), #### [?] 
     Collect(
         # keys=['img'],
         # meta_keys=[

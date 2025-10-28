@@ -186,6 +186,9 @@ class COCOTrain(Train):
                     save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'],
                                 self.summary_writer, step=step + self.epoch * self.len_dl_train, prefix='train_')
 
+            print('train_loss', loss.item())
+            print('train_acc', avg_acc.item())
+
         self.mean_loss_train /= len(self.dl_train)
 
         # COCO evaluation
@@ -261,6 +264,9 @@ class COCOTrain(Train):
                                     joints_data['joints_visibility'], self.summary_writer,
                                     step=step + self.epoch * self.len_dl_val, prefix='val_')
 
+                print('val_loss', loss.item())
+                print('val_acc', avg_acc.item())
+                
         self.mean_loss_val /= len(self.dl_val)
         self.mean_acc_val /= len(self.dl_val)
 
