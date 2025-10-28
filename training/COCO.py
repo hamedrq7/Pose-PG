@@ -178,15 +178,6 @@ class COCOTrain(Train):
 
             idx += num_images
 
-            if self.use_tensorboard:
-                self.summary_writer.add_scalar('train_loss', loss.item(),
-                                               global_step=step + self.epoch * self.len_dl_train)
-                self.summary_writer.add_scalar('train_acc', avg_acc.item(),
-                                               global_step=step + self.epoch * self.len_dl_train)
-                if step == 0:
-                    save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'],
-                                self.summary_writer, step=step + self.epoch * self.len_dl_train, prefix='train_')
-
             # print('train_loss', loss.item())
             # print('train_acc', avg_acc.item())
             running_acc += avg_acc.item()
@@ -205,6 +196,17 @@ class COCOTrain(Train):
 
         print(f'Ep{self.epoch} - Train Acc: {self.acc_train_list[-1]:.3f} | Loss: {self.acc_train_list[-1]:.5f} | AP: {self.mAP_train_list[-1]:.3f}')
 
+        if self.use_tensorboard:
+            self.summary_writer.add_scalar('train_loss', self.loss_train_list[-1],
+                                            global_step=self.epoch)
+            self.summary_writer.add_scalar('train_acc', self.acc_train_list[-1],
+                                            global_step=self.epoch)
+            self.summary_writer.add_scalar('train_mAP', self.mAP_train_list[-1],
+                                            global_step=self.epoch)
+            if self.epoch % 10 == 0: 
+                save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'],
+                            self.summary_writer, step=self.epoch, prefix='train_')
+                    
     def _val(self):
         running_loss = 0.0
         running_acc = 0.0 
@@ -265,16 +267,6 @@ class COCOTrain(Train):
 
                 idx += num_images
 
-                if self.use_tensorboard:
-                    self.summary_writer.add_scalar('val_loss', loss.item(),
-                                                   global_step=step + self.epoch * self.len_dl_val)
-                    self.summary_writer.add_scalar('val_acc', avg_acc.item(),
-                                                   global_step=step + self.epoch * self.len_dl_val)
-                    if step == 0:
-                        save_images(image, target, joints_target, output, joints_preds,
-                                    joints_data['joints_visibility'], self.summary_writer,
-                                    step=step + self.epoch * self.len_dl_val, prefix='val_')
-
                 # print('val_loss', loss.item())
                 # print('val_acc', avg_acc.item())
                 running_acc += avg_acc.item()
@@ -292,3 +284,15 @@ class COCOTrain(Train):
         self.APs_val_list.append(all_APs)
 
         print(f'Ep{self.epoch} - Val Acc: {self.acc_val_list[-1]:.3f} | Loss: {self.loss_val_list[-1]:.5f} | AP: {self.mAP_val_list[-1]:.3f}')
+
+        if self.use_tensorboard:
+            self.summary_writer.add_scalar('val_loss', self.loss_val_list[-1],
+                                            global_step=self.epoch)
+            self.summary_writer.add_scalar('val_acc', self.acc_val_list[-1],
+                                            global_step=self.epoch)
+            self.summary_writer.add_scalar('val_mAP', self.mAP_val_list[-1],
+                                            global_step=self.epoch)
+            if self.epoch % 10 == 0: 
+                save_images(image, target, joints_target, output, joints_preds,
+                            joints_data['joints_visibility'], self.summary_writer,
+                            step=self.epoch, prefix='val_')

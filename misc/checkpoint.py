@@ -6,21 +6,12 @@ def save_results(path, acc_train_list, loss_train_list, mAP_train_list, APs_trai
     if os.path.isdir(path):
         path = os.path.join(path, 'results.npz')
     
-    acc_train_list = np.array(acc_train_list),
-    loss_train_list = np.array(loss_train_list),
-    mAP_train_list = np.array(mAP_train_list),
-    acc_val_list = np.array(acc_val_list),
-    loss_val_list = np.array(loss_val_list),
-    mAP_val_list = np.array(mAP_val_list),
-    
-    print(acc_train_list.shape)
-    print(loss_train_list.shape)
-    print(mAP_train_list.shape)
-    print(APs_train_list)
-    print(acc_val_list.shape)
-    print(loss_val_list.shape)
-    print(mAP_val_list.shape)
-    print(APs_val_list)
+    acc_train_list = np.array(acc_train_list)
+    loss_train_list = np.array(loss_train_list)
+    mAP_train_list = np.array(mAP_train_list)
+    acc_val_list = np.array(acc_val_list)
+    loss_val_list = np.array(loss_val_list)
+    mAP_val_list = np.array(mAP_val_list)
     
     np.savez(
         path,

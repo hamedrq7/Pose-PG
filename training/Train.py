@@ -214,7 +214,7 @@ class Train(object):
                             bn_momentum=self.model_bn_momentum).to(self.device)
         elif self.model_name == 'poseresnet':
             self.model = PoseResNet(resnet_size=self.model_c, nof_joints=self.model_nof_joints, 
-                            bn_momentum=self.model_bn_momentum)
+                            bn_momentum=self.model_bn_momentum).to(self.device)
 
         self.model = load_pretrained(self.model, self.pretrained_weight_path, device=self.device)
         self.model = self.model.to(self.device)
@@ -370,7 +370,7 @@ class Train(object):
                         optimizer=self.optim, params=self.parameters)
 
         if self.best_loss is None or self.best_loss > self.loss_val_list[-1]:
-            self.best_loss = self.self.loss_val_list[-1]
+            self.best_loss = self.loss_val_list[-1]
             print('best_loss %f at epoch %d' % (self.best_loss, self.epoch + 1))
             save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_best_loss.pth'), epoch=self.epoch + 1,
                             model=self.model, optimizer=self.optim, params=self.parameters)
