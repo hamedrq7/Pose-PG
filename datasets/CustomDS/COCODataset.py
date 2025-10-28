@@ -225,9 +225,9 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
     
     def evaluate_accuracy(self, output, target, params=None):
         if params is not None:
-            # hm_type = params['hm_type']
-            # thr = params['thr']
-            # accs, avg_acc, cnt, joints_preds, joints_target = evaluate_pck_accuracy(output, target, hm_type, thr)
+            hm_type = params['hm_type']
+            thr = params['thr']
+            accs, avg_acc, cnt, joints_preds, joints_target = evaluate_pck_accuracy(output, target, hm_type, thr)
             pass
         else:
             from misc.utils import evaluate_pck_accuracy

@@ -43,7 +43,9 @@ def load_pretrained(model, pretrained_weight_path, device):
                 new_key = k.replace("module.model.", "")
                 new_state_dict[new_key] = v
                 # print(k, new_key)
-    
+    else: 
+        new_state_dict = checkpoint
+        
     missing_keys, unexpected_keys = model.load_state_dict(
         # torch.load(pretrained_weight_path, map_location=device, weights_only = False),
         new_state_dict,
