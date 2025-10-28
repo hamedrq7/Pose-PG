@@ -125,7 +125,7 @@ class COCOTrain(Train):
         running_loss = 0.0
         running_acc = 0.0
 
-        num_samples = self.len_dl_train * self.batch_size
+        num_samples = len(self.ds_train) # self.len_dl_train * self.batch_size
         all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
         all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
         image_paths = []
@@ -189,7 +189,7 @@ class COCOTrain(Train):
         # COCO evaluation
         print('\nTrain AP/AR')
         all_APs, mAP = self.ds_train.evaluate(
-            all_preds, all_boxes, image_paths, res_folder=self.log_path)
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
         
         self.mAP_train_list.append(mAP)
         self.APs_train_list.append(all_APs)
@@ -278,7 +278,7 @@ class COCOTrain(Train):
         # COCO evaluation
         print('\nVal AP/AR')
         all_APs, mAP = self.ds_val.evaluate(
-            all_preds, all_boxes, image_paths, res_folder=self.log_path)
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
 
         self.mAP_val_list.append(mAP)
         self.APs_val_list.append(all_APs)
