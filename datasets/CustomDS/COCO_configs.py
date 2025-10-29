@@ -212,6 +212,7 @@ COCO_data_cfg = dict(
     det_bbox_thr=0.0,
     bbox_file='data/coco/person_detection_results/'
     'COCO_val2017_detections_AP_H_56_person.json',
+    use_different_joint_weights=False
 )
 
 from datasets.CustomDS.augmentaions import (
@@ -230,7 +231,7 @@ COCO_train_pipeline = [
     LoadImageFromFile(),
     TopDownRandomFlip(flip_prob=0.5), 
     TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3),
-    TopDownGetRandomScaleRotation(rot_factor=40, scale_factor=0.3), 
+    TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35), 
     TopDownAffine(),
     ToTensor(), 
     NormalizeTensor(

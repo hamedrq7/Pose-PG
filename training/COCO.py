@@ -188,10 +188,10 @@ class COCOTrain(Train):
 
         # COCO evaluation
         print('\nTrain AP/AR')
-        # all_APs, mAP = self.ds_train.evaluate(
-        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
-        all_APs, mAP = self.ds_train.evaluate_overall_accuracy(
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
+        all_APs, mAP = self.ds_train.evaluate(
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        # all_APs, mAP = self.ds_train.evaluate_overall_accuracy(
+        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
         
         self.mAP_train_list.append(mAP)
         self.APs_train_list.append(all_APs)
@@ -279,10 +279,10 @@ class COCOTrain(Train):
 
         # COCO evaluation
         print('\nVal AP/AR')
-        # all_APs, mAP = self.ds_val.evaluate(
-        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
-        all_APs, mAP = self.ds_val.evaluate_overall_accuracy(
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
+        all_APs, mAP = self.ds_val.evaluate(
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        # all_APs, mAP = self.ds_val.evaluate_overall_accuracy(
+        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
 
         self.mAP_val_list.append(mAP)
         self.APs_val_list.append(all_APs)

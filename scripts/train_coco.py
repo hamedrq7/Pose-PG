@@ -38,7 +38,8 @@ def main(exp_name,
          # coco_root_path="./datasets/COCO",
          # coco_bbox_path=None,
          seed=1,
-         device=None):
+         device=None,
+         ):
     
     
     # Seeds
@@ -76,28 +77,22 @@ def main(exp_name,
     from datasets.CustomDS.COCODataset import TopDownCocoDataset
     import datasets.CustomDS.COCO_configs as COCO_configs
 
-    # ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
-    #                     data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
+    ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
+                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
 
-    # ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-    #                     data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False) # test_mode ? [?]
+    ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
+                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False) # test_mode ? [?]
 
-    ds_train = COCODataset(
-        root_path=COCO_configs.COCO_data_root, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
-        image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.3, 
-        rotate_prob=0.6, rotation_factor=40., half_body_prob=0.3, use_different_joints_weight=True, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
-    )
-    
-    ds_train = COCODataset(
-        root_path=COCO_configs.COCO_data_root, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
-        image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.35, 
-        rotate_prob=0.5, rotation_factor=45., half_body_prob=0.3, use_different_joints_weight=False, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
-    )
+    # ds_train = COCODataset(
+    #     root_path=COCO_configs.COCO_data_root, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
+    #     image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.35, 
+    #     rotate_prob=0.5, rotation_factor=45., half_body_prob=0.3, use_different_joints_weight=False, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
+    # )
 
-    ds_val = COCODataset(
-        root_path=COCO_configs.COCO_data_root, data_version="val2017", is_train=False, use_gt_bboxes=(True),
-        bbox_path=None, image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
-    )
+    # ds_val = COCODataset(
+    #     root_path=COCO_configs.COCO_data_root, data_version="val2017", is_train=False, use_gt_bboxes=(True),
+    #     bbox_path=None, image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
+    # )
 
     train = COCOTrain(
         exp_name=exp_name,
@@ -124,7 +119,7 @@ def main(exp_name,
         model_nof_joints=model_nof_joints,
         model_bn_momentum=model_bn_momentum,
         flip_test_images=flip_test_images,
-        device=device
+        device=device,
     )
 
     train.run()
@@ -168,6 +163,7 @@ if __name__ == '__main__':
     #                     type=str, default=None)
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
+
     args = parser.parse_args()
 
     main(**args.__dict__)
