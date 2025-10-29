@@ -194,7 +194,7 @@ class COCOTrain(Train):
         self.mAP_train_list.append(mAP)
         self.APs_train_list.append(all_APs)
 
-        print(f'Ep{self.epoch} - Train Acc: {self.acc_train_list[-1]:.3f} | Loss: {self.acc_train_list[-1]:.5f} | AP: {self.mAP_train_list[-1]:.3f}')
+        print(f'Ep{self.epoch} - Train Acc: {self.acc_train_list[-1]:.3f} | Loss: {self.loss_train_list[-1]:.5f} | AP: {self.mAP_train_list[-1]:.3f}')
 
         if self.use_tensorboard:
             self.summary_writer.add_scalar('train_loss', self.loss_train_list[-1],

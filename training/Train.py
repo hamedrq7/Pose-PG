@@ -202,6 +202,7 @@ class Train(object):
             self.summary_writer.add_text('parameters', '\n'.join(self.parameters))
 
         sys.stdout = Logger("{}/{}/run.log".format(log_path, exp_name))
+        # sys.stderr = sys.stdout
         command_line_args = sys.argv
         command = " ".join(command_line_args)
         print(f"The command that ran this script: {command}")
