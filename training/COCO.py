@@ -160,7 +160,7 @@ class COCOTrain(Train):
             s = joints_data['scale'].numpy()
             score = joints_data['score'].numpy()
             pixel_std = 200  # ToDo Parametrize this
-            bbox_id = joints_data['bbox_id'].numpy()
+            bbox_id = None if not 'bbox_id' in joints_data.keys() else joints_data['bbox_id'].numpy()
 
             # Get predictions on the original imagee
             preds, maxvals = get_final_preds(True, output.detach(), c, s,
@@ -188,8 +188,10 @@ class COCOTrain(Train):
 
         # COCO evaluation
         print('\nTrain AP/AR')
-        all_APs, mAP = self.ds_train.evaluate(
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        # all_APs, mAP = self.ds_train.evaluate(
+        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        all_APs, mAP = self.ds_train.evaluate_overall_accuracy(
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
         
         self.mAP_train_list.append(mAP)
         self.APs_train_list.append(all_APs)
@@ -249,7 +251,7 @@ class COCOTrain(Train):
                 s = joints_data['scale'].numpy()
                 score = joints_data['score'].numpy()
                 pixel_std = 200  # ToDo Parametrize this
-                bbox_id = joints_data['bbox_id'].numpy()
+                bbox_id = None if not 'bbox_id' in joints_data.keys() else joints_data['bbox_id'].numpy()
 
                 preds, maxvals = get_final_preds(True, output, c, s,
                                                  pixel_std)  # ToDo check what post_processing exactly does
@@ -277,8 +279,10 @@ class COCOTrain(Train):
 
         # COCO evaluation
         print('\nVal AP/AR')
-        all_APs, mAP = self.ds_val.evaluate(
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        # all_APs, mAP = self.ds_val.evaluate(
+        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=self.log_path)
+        all_APs, mAP = self.ds_val.evaluate_overall_accuracy(
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
 
         self.mAP_val_list.append(mAP)
         self.APs_val_list.append(all_APs)

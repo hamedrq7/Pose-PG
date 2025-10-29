@@ -27,7 +27,7 @@ class COCODataset(Dataset):
     def __init__(self,
                  root_path="./datasets/COCO", data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
                  image_width=288, image_height=384, color_rgb=True,
-                 scale=True, scale_factor=0.35, flip_prob=0.5, rotate_prob=0.5, rotation_factor=45., half_body_prob=0.3,
+                 scale=True, scale_factor=0.35, flip_prob=0.5, rotate_prob=0.6, rotation_factor=40., half_body_prob=0.3,
                  use_different_joints_weight=False, heatmap_sigma=3, soft_nms=False,
                  ):
         """
@@ -386,7 +386,7 @@ class COCODataset(Dataset):
         if 'test' not in self.data_version:
             info_str = self._do_python_keypoint_eval(res_file)
             name_value = OrderedDict(info_str)
-            print('in COCODataset eval', name_value.keys())
+            # print('in COCODataset eval', name_value.keys())
             return name_value, name_value['AP']
         else:
             return {'Null': 0}, 0

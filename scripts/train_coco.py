@@ -72,25 +72,26 @@ def main(exp_name,
 
     print("\nLoading train and validation datasets...")
 
-    # # load train and val datasets
-    # ds_train = COCODataset(
-    #     root_path=coco_root_path, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
-    #     image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
-    # )
-
-    # ds_val = COCODataset(
-    #     root_path=coco_root_path, data_version="val2017", is_train=False, use_gt_bboxes=(coco_bbox_path is None),
-    #     bbox_path=coco_bbox_path, image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
-    # )
-
+    # load train and val datasets
     from datasets.CustomDS.COCODataset import TopDownCocoDataset
     import datasets.CustomDS.COCO_configs as COCO_configs
 
-    ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
+    # ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
+    #                     data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
 
-    ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False) # test_mode ? [?]
+    # ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
+    #                     data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False) # test_mode ? [?]
+
+    ds_train = COCODataset(
+        root_path=COCO_configs.COCO_data_root, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
+        image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.3, 
+        rotate_prob=0.6, rotation_factor=40., half_body_prob=0.3, use_different_joints_weight=True, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
+    )
+
+    ds_val = COCODataset(
+        root_path=COCO_configs.COCO_data_root, data_version="val2017", is_train=False, use_gt_bboxes=(True),
+        bbox_path=None, image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
+    )
 
     train = COCOTrain(
         exp_name=exp_name,
