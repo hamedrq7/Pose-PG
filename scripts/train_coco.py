@@ -87,6 +87,12 @@ def main(exp_name,
         image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.3, 
         rotate_prob=0.6, rotation_factor=40., half_body_prob=0.3, use_different_joints_weight=True, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
     )
+    
+    ds_train = COCODataset(
+        root_path=COCO_configs.COCO_data_root, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
+        image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.35, 
+        rotate_prob=0.5, rotation_factor=45., half_body_prob=0.3, use_different_joints_weight=False, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
+    )
 
     ds_val = COCODataset(
         root_path=COCO_configs.COCO_data_root, data_version="val2017", is_train=False, use_gt_bboxes=(True),
