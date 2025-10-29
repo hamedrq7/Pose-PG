@@ -178,8 +178,8 @@ class COCOTrain(Train):
 
             idx += num_images
 
-            print('train_loss', loss.item())
-            print('train_acc', avg_acc.item())
+            # print('train_loss', loss.item())
+            # print('train_acc', avg_acc.item())
             running_acc += avg_acc.item()
             running_loss += loss.item()
 
