@@ -9,7 +9,7 @@ import numpy as np
 from xtcocotools.cocoeval import COCOeval
 
 from datasets.CustomDS.nms import oks_nms, soft_oks_nms
-from Kpt2dSviewRgbImgTopDownDataset import Kpt2dSviewRgbImgTopDownDataset
+from datasets.CustomDS.Kpt2dSviewRgbImgTopDownDataset import Kpt2dSviewRgbImgTopDownDataset
 
 
 class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
@@ -232,6 +232,7 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
         kpts = defaultdict(list)
         for i in range(predictions.shape[0]):
             image_id = self.name2id[image_paths[i][len(self.img_prefix):]]
+            cat = self.id2Cat[image_id][int(bounding_boxes[i][6])]['category']
             kpts[image_id].append({
                 'keypoints': predictions[i], 
                 'center': bounding_boxes[i][0:2],
@@ -240,6 +241,7 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
                 'score': bounding_boxes[i][5],
                 'image_id': image_id,
                 'bbox_id': bounding_boxes[i][6], 
+                'category': cat
             })
 
     #     for output in outputs:

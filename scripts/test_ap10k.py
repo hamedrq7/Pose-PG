@@ -12,7 +12,7 @@ sys.path.insert(1, os.getcwd())
 
 from datasets.CustomDS.data_configs import AP10K_configs
 from misc.general_utils import set_seed_reproducability, get_device
-from datasets.CustomDS import AnimalAP10KDataset
+from datasets.CustomDS.AnimalAP10KDataset import AnimalAP10KDataset
 
 def main(exp_name,
          batch_size=1,
@@ -38,10 +38,10 @@ def main(exp_name,
 
     print("\nLoading validation datasets...")
     ds_val = AnimalAP10KDataset(
-        f'{AP10K_configs.AP10K_data_root}',
-        f'{annfile}',
+        f'{AP10K_configs.AP10K_data_root}/annotations/ap10k-val-split1.json',
+        f'{AP10K_configs.AP10K_data_root}/data/',
         AP10K_configs.AP10K_data_cfg,
-        AP10K_configs.AP10K_test_pipeline,
+        AP10K_configs.AP10K_val_pipeline,
         dataset_info=AP10K_configs.AP10K_dataset_info,
         test_mode=True)
     
@@ -84,5 +84,20 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
+    """
+    Results for Validation set of Ap10k on poseresnet50 (256x256)
+    Test: Loss 0.000332 - Accuracy 0.801165
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.705
+    Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.942
+    Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.781
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.545
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.709
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.738
+    Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.950
+    Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.809
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.548
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.741
+    AP:  OrderedDict({'AP': np.float64(0.705187733054311), 'AP .5': np.float64(0.9420956177040277), 'AP .75': np.float64(0.7808868140904278), 'AP (M)': np.float64(0.5447829398324447), 'AP (L)': np.float64(0.7091583798798152), 'AR': np.float64(0.7379255190755988), 'AR .5': np.float64(0.9504095492200171), 'AR .75': np.float64(0.8091246677172157), 'AR (M)': np.float64(0.5484615384615384), 'AR (L)': np.float64(0.7408141930089084)})
+    """
         
     main(**args.__dict__)

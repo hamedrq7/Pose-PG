@@ -1,4 +1,5 @@
-from augmentaions import (
+
+from datasets.CustomDS.augmentaions import (
         LoadImageFromFile, 
         TopDownAffine,
         ToTensor,
@@ -10,8 +11,7 @@ from augmentaions import (
         TopDownGenerateTarget
     )
 
-
-AP10K_data_root = 'datasets/AP10K'
+AP10K_data_root = './datasets/ap-10k'
 
 ######## From configs\_base_\datasets\ap10k.py ######## 
 AP10K_dataset_info = dict(

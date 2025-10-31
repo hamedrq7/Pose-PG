@@ -19,8 +19,8 @@ def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, 
     return model.to(device)
     
 def load_pretrained(model, pretrained_weight_path, device):
-    checkpoint = torch.load(pretrained_weight_path, map_location=device, weights_only=False)
-    
+    checkpoint = torch.load(pretrained_weight_path, map_location=device, weights_only=False) 
+
     #### TODO [ ]
     ####### From robustbench: 
     # https://github.com/RobustBench/robustbench/blob/master/robustbench/model_zoo/imagenet.py
@@ -43,6 +43,19 @@ def load_pretrained(model, pretrained_weight_path, device):
                 new_key = k.replace("module.model.", "")
                 new_state_dict[new_key] = v
                 # print(k, new_key)
+    
+    ### Models from AP10-K repo (linked in their readme)
+    elif 'meta' in checkpoint.keys() and 'mmcv_version' in checkpoint['meta']: 
+        new_state_dict = {}
+        for k, v in checkpoint['state_dict'].items():
+            if "backbone." in k: 
+                new_key = k.replace("backbone.", "")
+            elif "keypoint_head." in k: 
+                new_key = k.replace("keypoint_head.", "")
+            else:
+                print('error in loading model weights (name matchin issue)')
+                return None
+            new_state_dict[new_key] = v
     else: 
         new_state_dict = checkpoint
         
@@ -55,7 +68,9 @@ def load_pretrained(model, pretrained_weight_path, device):
     if len(missing_keys) > 0 or len(unexpected_keys) > 0:
         print('Pre-trained weights missing keys:', missing_keys)
         print('Pre-trained weights unexpected keys:', unexpected_keys)
-
+    else:
+        print('All pretrained weights keys matched')
+        
     return model 
 
 def set_seed_reproducability(seed): 

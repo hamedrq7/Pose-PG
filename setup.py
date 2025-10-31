@@ -16,7 +16,16 @@ def download_file(url: str, destination: str):
     urllib.request.urlretrieve(url, destination)
     print(f"Download complete: {destination}")
 
-# Create directories
+# Install dependencies
+if os.path.exists("requirements.txt"):
+    print("\nInstalling dependencies from requirements.txt...")
+    run("pip install -r requirements.txt")
+else:
+    print("\nNo requirements.txt found — skipping dependency installation.")
+
+print("\nAll downloads and setup complete.")
+
+# # Create directories
 os.makedirs("./downloads", exist_ok=True)
 os.makedirs("./datasets/COCO", exist_ok=True)
 
@@ -24,8 +33,8 @@ os.makedirs("./datasets/COCO", exist_ok=True)
 coco_val_zip = "./downloads/val2017.zip"
 coco_val_extract_dir = "./datasets/COCO/val2017"  
 
-coco_train_zip = "./downloads/train2017.zip"
-coco_train_extract_dir = "./datasets/COCO/train2017"  
+# coco_train_zip = "./downloads/train2017.zip"
+# coco_train_extract_dir = "./datasets/COCO/train2017"  
 
 coco_annotation = "./downloads/annotations_trainval2017.zip.zip"
 coco_annotation_extract_dir = "./datasets/COCO/annotations"  
@@ -36,11 +45,11 @@ if not os.path.exists(coco_val_extract_dir):
 else:
     print(f"Skipping unzip — found existing directory: {coco_val_extract_dir}")
 
-download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
-if not os.path.exists(coco_train_extract_dir):
-    run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
-else:
-    print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
+# download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
+# if not os.path.exists(coco_train_extract_dir):
+#     run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+# else:
+#     print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
 
 download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_annotation)
 if not os.path.exists(coco_annotation_extract_dir):
@@ -59,11 +68,12 @@ download_file(
 dropbox_url = "https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1"
 download_file(dropbox_url, "./downloads/madry_adversarial_resnet50.pt")
 
-# Install dependencies
-if os.path.exists("requirements.txt"):
-    print("\nInstalling dependencies from requirements.txt...")
-    run("pip install -r requirements.txt")
-else:
-    print("\nNo requirements.txt found — skipping dependency installation.")
+# Poseresnet50 pretrained on COCO (256x192)
+import gdown
 
-print("\nAll downloads and setup complete.")
+url = "https://drive.google.com/uc?id=1G5vwpkN6Dr7k1Y0mpo3Cai0uHklQzNmY"
+gdown.download(url, output='./downloads/pose_resnet_50_256x192.pth', quiet=False)
+
+# Poserenset50 pretrained on AP10K (256x256)
+download_file("https://download.openmmlab.com/mmpose/animal/resnet/res50_ap10k_256x256-35760eb8_20211029.pth", 
+    "./downloads/posersnet50_ap10_256x256.pth")

@@ -83,7 +83,7 @@ class Test(object):
         self.device = get_device(device)
 
         self.model = get_model(model_name=model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints,
-            model_bn_momentum=self.model_bn_momentum, device=self.devic, pretrained_weight_path=pretrained_weight_path)
+            model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=pretrained_weight_path)
         
         # define loss
         if self.loss == 'JointsMSELoss':
@@ -103,7 +103,7 @@ class Test(object):
         self.mean_acc_test = 0.
 
     def _test(self):
-        num_samples = len(self.dl_test)
+        num_samples = len(self.ds_test)
         all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
         all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
         image_paths = []
@@ -141,6 +141,7 @@ class Test(object):
                 pixel_std = 200  # ToDo Parametrize this
                 bbox_id = joints_data['bbox_id'].numpy()
 
+                
                 preds, maxvals = get_final_preds(True, output, c, s,
                                                  pixel_std)  # ToDo check what post_processing exactly does
 
@@ -152,7 +153,7 @@ class Test(object):
                 all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
                 all_boxes[idx:idx + num_images, 5] = score
                 all_boxes[idx:idx + num_images, 6] = bbox_id
-                
+
                 image_paths.extend(joints_data['imgPath'])
 
                 idx += num_images
@@ -160,31 +161,23 @@ class Test(object):
                 self.mean_loss_test += loss.item()
                 self.mean_acc_test += avg_acc.item()
 
-                if step == 0:
-                    save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'])
+                # if step == 0:
+                #     save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'])
 
         self.mean_loss_test /= self.len_dl_test
         self.mean_acc_test /= self.len_dl_test
 
         print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
         print('\nVal AP/AR')
-        val_acc, mean_mAP_val = self.ds_test.evaluate( 
+        AP_res = self.ds_test.evaluate( 
             all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder='/')
-        # val_acc, mean_mAP_val = self.ds_test.evaluate_overall_accuracy( 
-        #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir='/')
-        print('val_acc', val_acc, 'mean_mAP_val', mean_mAP_val)
+        
+        print('AP: ', AP_res)
 
     def run(self):
         """
         Runs the test.
         """
-
-        print('\nTest started @ %s' % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-        # start testing
-        print('\nLoaded checkpoint %s @ %s\nSaved epoch %d' %
-              (self.checkpoint_path, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.starting_epoch))
-
         self.mean_loss_test = 0.
         self.mean_acc_test = 0.
 
