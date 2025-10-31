@@ -17,46 +17,7 @@ from misc.visualization import save_images
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from misc.log_utils import Logger 
-
-def load_pretrained(model, pretrained_weight_path, device):
-    checkpoint = torch.load(pretrained_weight_path, map_location=device, weights_only=False)
-    
-    #### TODO [ ]
-    ####### From robustbench: 
-    # https://github.com/RobustBench/robustbench/blob/master/robustbench/model_zoo/imagenet.py
-    
-    #### HRNET REPO, standard r50
-    # resnet50 from https://drive.google.com/drive/folders/1E6j6W7RqGhW1o7UHgiQ9X4g8fVJRU9TX
-    # Its from the hrnet repo: https://github.com/leoxiaobin/deep-high-resolution-net.pytorch/tree/master
-    # pretrained_weight_path = 'C:/Users/hamed/Downloads/resnet50-19c8e357.pth'
-
-    ### The models from MadyLab are a bit weird 
-    if 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'schedule' in checkpoint.keys() and 'epoch' in checkpoint.keys() and len(checkpoint.keys()) == 4: 
-        # https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1
-
-        state_dict = checkpoint["model"]
-
-        # Remove "module.model." prefix
-        new_state_dict = {}
-        for k, v in state_dict.items():
-            if "attacker" not in k: 
-                new_key = k.replace("module.model.", "")
-                new_state_dict[new_key] = v
-                # print(k, new_key)
-    else: 
-        new_state_dict = checkpoint
-        
-    missing_keys, unexpected_keys = model.load_state_dict(
-        # torch.load(pretrained_weight_path, map_location=device, weights_only = False),
-        new_state_dict,
-        strict=False,  # strict=False is required to load models pre-trained on imagenet
-    )
-    print('Pre-trained weights loaded.')
-    if len(missing_keys) > 0 or len(unexpected_keys) > 0:
-        print('Pre-trained weights missing keys:', missing_keys)
-        print('Pre-trained weights unexpected keys:', unexpected_keys)
-
-    return model 
+from misc.general_utils import get_model, get_device
 
 class Train(object):
     """
@@ -177,16 +138,7 @@ class Train(object):
         self.flip_test_images = flip_test_images
         self.epoch = 0
 
-        # torch device
-        if device is not None:
-            self.device = device
-        else:
-            if torch.cuda.is_available():
-                self.device = torch.device('cuda:0')
-            else:
-                self.device = torch.device('cpu')
-
-        print(self.device)
+        self.device = get_device(device)
 
         
         os.makedirs(self.log_path, 0o755, exist_ok=False)  # exist_ok=False to avoid overwriting        
@@ -207,18 +159,8 @@ class Train(object):
         command = " ".join(command_line_args)
         print(f"The command that ran this script: {command}")
 
-
-        #
-        # load model
-        if self.model_name == 'hrnet':
-            self.model = HRNet(c=self.model_c, nof_joints=self.model_nof_joints,
-                            bn_momentum=self.model_bn_momentum).to(self.device)
-        elif self.model_name == 'poseresnet':
-            self.model = PoseResNet(resnet_size=self.model_c, nof_joints=self.model_nof_joints, 
-                            bn_momentum=self.model_bn_momentum).to(self.device)
-
-        self.model = load_pretrained(self.model, self.pretrained_weight_path, device=self.device)
-        self.model = self.model.to(self.device)
+        model = get_model(model_name=self.model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints, 
+                          model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=self.pretrained_weight_path)
 
         # load previous checkpoint
         if self.checkpoint_path is not None:
@@ -232,7 +174,6 @@ class Train(object):
         else:
             self.starting_epoch = 0
 
-        #
         # define loss and optimizers
         if self.loss == 'JointsMSELoss':
             self.loss_fn = JointsMSELoss().to(self.device)
@@ -249,7 +190,6 @@ class Train(object):
         else:
             raise NotImplementedError
 
-
         if lr_decay:
             self.lr_scheduler = MultiStepLR(self.optim, list(self.lr_decay_steps), gamma=self.lr_decay_gamma,
                                             last_epoch=self.starting_epoch if self.starting_epoch else -1)
@@ -259,16 +199,8 @@ class Train(object):
                                    num_workers=self.num_workers, drop_last=False)
         self.len_dl_train = len(self.dl_train)
 
-        # dl_val = DataLoader(self.ds_val, batch_size=1, shuffle=False, num_workers=num_workers)
         self.dl_val = DataLoader(self.ds_val, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers)
         self.len_dl_val = len(self.dl_val)
-
-        # initialize variables
-        # self.mean_loss_train = 0.
-        # self.mean_acc_train = 0.
-        # self.mean_loss_val = 0.
-        # self.mean_acc_val = 0.
-        # self.mean_mAP_val = 0.
 
         self.best_loss = None
         self.best_acc = None
@@ -396,12 +328,6 @@ class Train(object):
         # start training
         for self.epoch in range(self.starting_epoch, self.epochs):
             print('\nEpoch %d of %d @ %s' % (self.epoch + 1, self.epochs, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-
-            # self.mean_loss_train = 0.
-            # self.mean_loss_val = 0.
-            # self.mean_acc_train = 0.
-            # self.mean_acc_val = 0.
-            # self.mean_mAP_val = 0.
 
             #
             # Train

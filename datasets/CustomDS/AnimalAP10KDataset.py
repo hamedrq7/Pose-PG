@@ -7,9 +7,10 @@ from collections import OrderedDict, defaultdict
 import json_tricks as json
 import numpy as np
 from xtcocotools.cocoeval import COCOeval
+
+from datasets.CustomDS.nms import oks_nms, soft_oks_nms
 from Kpt2dSviewRgbImgTopDownDataset import Kpt2dSviewRgbImgTopDownDataset
 
-# from ....core.post_processing import oks_nms, soft_oks_nms
 
 class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
     """AP-10K dataset for animal pose estimation.
@@ -69,25 +70,25 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
             dataset_info=dataset_info,
             test_mode=test_mode)
 
+        self.skipped = 0 
         self.use_gt_bbox = data_cfg['use_gt_bbox']
         self.bbox_file = data_cfg['bbox_file']
         self.det_bbox_thr = data_cfg.get('det_bbox_thr', 0.0)
-
         self.use_nms = data_cfg.get('use_nms', True)
         self.soft_nms = data_cfg['soft_nms']
         self.nms_thr = data_cfg['nms_thr']
         self.oks_thr = data_cfg['oks_thr']
         self.vis_thr = data_cfg['vis_thr']
 
-        self.ann_info['use_different_joint_weights'] = False
         self.db, self.id2Cat = self._get_db()
 
         print(f'=> num_images: {self.num_images}')
         print(f'=> load {len(self.db)} samples')
+        print('skipped in get.db()', self.skipped)
 
     def _get_db(self):
         """Load dataset."""
-        assert self.use_gt_bbox
+        assert self.use_gt_bbox # [?]
         gt_db, id2Cat = self._load_coco_keypoint_annotations()
         return gt_db, id2Cat
 
@@ -132,6 +133,8 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
             if ('area' not in obj or obj['area'] > 0) and x2 > x1 and y2 > y1:
                 obj['clean_bbox'] = [x1, y1, x2 - x1, y2 - y1]
                 valid_objs.append(obj)
+            else:
+                self.skipped += 1
         objs = valid_objs
 
         bbox_id = 0
@@ -155,6 +158,7 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
 
             image_file = os.path.join(self.img_prefix, self.id2name[img_id])
             rec.append({
+                'img_id': img_id,
                 'image_file': image_file,
                 'center': center,
                 'scale': scale,
@@ -176,7 +180,21 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
 
         return rec, id2Cat
 
-    def evaluate(self, outputs, res_folder, metric='mAP', **kwargs):
+    ### Copied from Simple-HRNet codebase, it seems like it does not consider mask when calculating pck
+    def evaluate_accuracy(self, output, target, params=None):
+        if params is not None:
+            hm_type = params['hm_type']
+            thr = params['thr']
+            accs, avg_acc, cnt, joints_preds, joints_target = evaluate_pck_accuracy(output, target, hm_type, thr)
+            pass
+        else:
+            from misc.utils import evaluate_pck_accuracy
+            accs, avg_acc, cnt, joints_preds, joints_target = evaluate_pck_accuracy(output, target)
+
+        return accs, avg_acc, cnt, joints_preds, joints_target
+
+    # def evaluate(self, outputs, res_folder, metric='mAP', **kwargs):
+    def evaluate(self, predictions, bounding_boxes, image_paths, res_folder, metric='mAP', **kwargs):
         """Evaluate coco keypoint results. The pose prediction results will be
         saved in `${res_folder}/result_keypoints.json`.
 
@@ -202,16 +220,27 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
         Returns:
             dict: Evaluation results for evaluation metric.
         """
-        return None
-    #     metrics = metric if isinstance(metric, list) else [metric]
-    #     allowed_metrics = ['mAP']
-    #     for metric in metrics:
-    #         if metric not in allowed_metrics:
-    #             raise KeyError(f'metric {metric} is not supported')
 
-    #     res_file = os.path.join(res_folder, 'result_keypoints.json')
+        metrics = metric if isinstance(metric, list) else [metric]
+        allowed_metrics = ['mAP']
+        for metric in metrics:
+            if metric not in allowed_metrics:
+                raise KeyError(f'metric {metric} is not supported')
 
-    #     kpts = defaultdict(list)
+        res_file = os.path.join(res_folder, 'result_keypoints.json')
+
+        kpts = defaultdict(list)
+        for i in range(predictions.shape[0]):
+            image_id = self.name2id[image_paths[i][len(self.img_prefix):]]
+            kpts[image_id].append({
+                'keypoints': predictions[i], 
+                'center': bounding_boxes[i][0:2],
+                'scale': bounding_boxes[i][2:4],
+                'area': bounding_boxes[i][4],
+                'score': bounding_boxes[i][5],
+                'image_id': image_id,
+                'bbox_id': bounding_boxes[i][6], 
+            })
 
     #     for output in outputs:
     #         preds = output['preds']
@@ -233,42 +262,42 @@ class AnimalAP10KDataset(Kpt2dSviewRgbImgTopDownDataset):
     #                 'bbox_id': bbox_ids[i],
     #                 'category': cat
     #             })
-    #     kpts = self._sort_and_unique_bboxes(kpts)
+        kpts = self._sort_and_unique_bboxes(kpts)
 
-    #     # rescoring and oks nms
-    #     num_joints = self.ann_info['num_joints']
-    #     vis_thr = self.vis_thr
-    #     oks_thr = self.oks_thr
-    #     valid_kpts = []
-    #     for image_id in kpts.keys():
-    #         img_kpts = kpts[image_id]
-    #         for n_p in img_kpts:
-    #             box_score = n_p['score']
-    #             kpt_score = 0
-    #             valid_num = 0
-    #             for n_jt in range(0, num_joints):
-    #                 t_s = n_p['keypoints'][n_jt][2]
-    #                 if t_s > vis_thr:
-    #                     kpt_score = kpt_score + t_s
-    #                     valid_num = valid_num + 1
-    #             if valid_num != 0:
-    #                 kpt_score = kpt_score / valid_num
-    #             # rescoring
-    #             n_p['score'] = kpt_score * box_score
+        # rescoring and oks nms
+        num_joints = self.ann_info['num_joints']
+        vis_thr = self.vis_thr
+        oks_thr = self.oks_thr
+        valid_kpts = []
+        for image_id in kpts.keys():
+            img_kpts = kpts[image_id]
+            for n_p in img_kpts:
+                box_score = n_p['score']
+                kpt_score = 0
+                valid_num = 0
+                for n_jt in range(0, num_joints):
+                    t_s = n_p['keypoints'][n_jt][2]
+                    if t_s > vis_thr:
+                        kpt_score = kpt_score + t_s
+                        valid_num = valid_num + 1
+                if valid_num != 0:
+                    kpt_score = kpt_score / valid_num
+                # rescoring
+                n_p['score'] = kpt_score * box_score
 
-    #         if self.use_nms:
-    #             nms = soft_oks_nms if self.soft_nms else oks_nms
-    #             keep = nms(list(img_kpts), oks_thr, sigmas=self.sigmas)
-    #             valid_kpts.append([img_kpts[_keep] for _keep in keep])
-    #         else:
-    #             valid_kpts.append(img_kpts)
+            if self.use_nms:
+                nms = soft_oks_nms if self.soft_nms else oks_nms
+                keep = nms(list(img_kpts), oks_thr, sigmas=self.sigmas)
+                valid_kpts.append([img_kpts[_keep] for _keep in keep])
+            else:
+                valid_kpts.append(img_kpts)
 
-    #     self._write_coco_keypoint_results(valid_kpts, res_file)
+        self._write_coco_keypoint_results(valid_kpts, res_file)
 
-    #     info_str = self._do_python_keypoint_eval(res_file)
-    #     name_value = OrderedDict(info_str)
+        info_str = self._do_python_keypoint_eval(res_file)
+        name_value = OrderedDict(info_str)
 
-    #     return name_value
+        return name_value
 
     def _write_coco_keypoint_results(self, keypoints, res_file):
         """Write results into a json file."""

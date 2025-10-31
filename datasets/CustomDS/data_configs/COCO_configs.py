@@ -268,10 +268,7 @@ COCO_val_pipeline = [
         #     'flip_pairs'
         # ]
         keys=['img', 'target', 'target_weight'],
-        meta_keys=[
-            'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
-            'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
-        ]
+        
     ),
 ]
 

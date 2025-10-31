@@ -75,7 +75,7 @@ def main(exp_name,
 
     # load train and val datasets
     from datasets.CustomDS.COCODataset import TopDownCocoDataset
-    import datasets.CustomDS.COCO_configs as COCO_configs
+    import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
 
     ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
                         data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)

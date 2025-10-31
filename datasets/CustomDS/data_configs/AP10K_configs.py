@@ -11,7 +11,7 @@ from augmentaions import (
     )
 
 
-AP10K_data_root = 'datasets/ap-10k'
+AP10K_data_root = 'datasets/AP10K'
 
 ######## From configs\_base_\datasets\ap10k.py ######## 
 AP10K_dataset_info = dict(
@@ -172,7 +172,6 @@ AP10K_channel_cfg = dict(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
     ])
 
-
 AP10K_data_cfg = dict(
     image_size=[256, 256],
     heatmap_size=[64, 64],
@@ -187,8 +186,8 @@ AP10K_data_cfg = dict(
     use_gt_bbox=True,
     det_bbox_thr=0.0,
     bbox_file='',
+    use_different_joint_weights=False
 )
-
 
 AP10K_train_pipeline = [
     LoadImageFromFile(),
@@ -204,11 +203,10 @@ AP10K_train_pipeline = [
     Collect(
         keys=['img', 'target', 'target_weight'],
         meta_keys=[
-            'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
-            'rotation', 'bbox_score', 'flip_pairs'
+            'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
+            'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
         ]),
 ]
-
 
 AP10K_val_pipeline = [
     LoadImageFromFile(),
@@ -218,11 +216,16 @@ AP10K_val_pipeline = [
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]
         ),
+    TopDownGenerateTarget(sigma=2), #### [?] 
     Collect(
-        keys=['img'],
+        keys=['img', 'target', 'target_weight'],
+        # meta_keys=[
+        #     'image_file', 'center', 'scale', 'rotation', 'bbox_score',
+        #     'flip_pairs'
+        # ]
         meta_keys=[
-            'image_file', 'center', 'scale', 'rotation', 'bbox_score',
-            'flip_pairs'
+            'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
+            'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
         ]
     ),
 ]

@@ -1,5 +1,5 @@
 from AnimalAP10KDataset import AnimalAP10KDataset
-import AP10K_configs
+import datasets.CustomDS.data_configs.AP10K_configs as AP10K_configs
 from torch.utils.data import DataLoader
 
 # train_ds = AnimalAP10KDataset(f'{AP10K_configs.AP10K_data_root}/annotations/ap10k-train-split1.json', img_prefix=f'{AP10K_configs.AP10K_data_root}/data/', 
@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader
     
 #     break
 
-import COCO_configs
+import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
 from COCODataset import TopDownCocoDataset
 
 train_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
