@@ -36,7 +36,7 @@ coco_val_extract_dir = "./datasets/COCO/val2017"
 # coco_train_zip = "./downloads/train2017.zip"
 # coco_train_extract_dir = "./datasets/COCO/train2017"  
 
-coco_annotation = "./downloads/annotations_trainval2017.zip.zip"
+coco_annotation = "./downloads/annotations_trainval2017.zip"
 coco_annotation_extract_dir = "./datasets/COCO/annotations"  
 
 download_file("http://images.cocodataset.org/zips/val2017.zip", coco_val_zip)
@@ -58,7 +58,7 @@ else:
     print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
 
 
-# Model weights
+################# Model weights
 download_file(
     "https://download.pytorch.org/models/resnet50-0676ba61.pth",
     "./downloads/standard_resnet50.pth"
@@ -68,11 +68,27 @@ download_file(
 dropbox_url = "https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1"
 download_file(dropbox_url, "./downloads/madry_adversarial_resnet50.pt")
 
-# Poseresnet50 pretrained on COCO (256x192)
+# Poseresnet50 pretrained on COCO (256x192), 
+# from here https://drive.google.com/drive/folders/1hOTihvbyIxsm5ygDpbUuJ7O_tzv4oXjC 
+#           https://github.com/leoxiaobin/deep-high-resolution-net.pytorch?tab=readme-ov-file
 import gdown
-
 url = "https://drive.google.com/uc?id=1G5vwpkN6Dr7k1Y0mpo3Cai0uHklQzNmY"
 gdown.download(url, output='./downloads/pose_resnet_50_256x192.pth', quiet=False)
+
+# Hrnet 48 256x192, trained on COCO 
+url = "https://drive.google.com/uc?id=15T2XqPjW7Ex0uyC1miGVYUv7ULOxIyJI"
+gdown.download(url, output='./downloads/pose_hrnet_w48_256x192.pth', quiet=False)
+
+### AP10k
+# download dataset
+url = "https://drive.google.com/uc?id=1-FNNGcdtAQRehYYkGY1y4wzFNg4iWNad"
+ap10_zip_path = "./downloads/ap-10k.zip"
+gdown.download(url, output=f'{ap10_zip_path}', quiet=False)
+
+if not os.path.exists("./downloads/ap-10k"):
+    run(f"unzip -q -n {ap10_zip_path} -d ./datasets")
+else:
+    print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
 
 # Poserenset50 pretrained on AP10K (256x256)
 download_file("https://download.openmmlab.com/mmpose/animal/resnet/res50_ap10k_256x256-35760eb8_20211029.pth", 

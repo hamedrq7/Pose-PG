@@ -24,7 +24,8 @@ def main(exp_name,
          disable_flip_test_images=False,
          seed=1,
          device=None,
-         model_name = 'hrnet'
+         model_name = 'hrnet',
+         disable_reindexing=False
          ):
 
     set_seed_reproducability(seed=seed)
@@ -49,6 +50,8 @@ def main(exp_name,
         dataset_info=AP10K_configs.AP10K_dataset_info,
         test_mode=True)
     
+    print('Re indexing: ', not disable_reindexing)
+    
     from testing.Test import Test
     test = Test(
         ds_test=ds_val, 
@@ -64,7 +67,7 @@ def main(exp_name,
         pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
         model_name=model_name,
-        zero_shot_testing=True
+        re_order_index=not disable_reindexing
     )
     test.run()
 
@@ -86,7 +89,8 @@ if __name__ == '__main__':
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
-    
+    parser.add_argument("--disable_reindexing", help="disables reindexing of output channels", action="store_true")
+
     args = parser.parse_args()
 
     """
