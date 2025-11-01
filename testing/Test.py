@@ -85,6 +85,8 @@ class Test(object):
 
         self.device = get_device(device)
 
+        os.makedirs(self.log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting    
+
         self.model = get_model(model_name=model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints,
             model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=pretrained_weight_path)
         if re_order_index: 

@@ -69,14 +69,14 @@ def main(exp_name,
         pretrained_weight_path = pretrained_weight_path,
         model_name=model_name,
         re_order_index=not disable_reindexing,
-        log_path = log_path
+        log_path = os.path.join(log_path, exp_name)
     )
     test.run()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exp_name", "-n",
+    parser.add_argument("--exp_name", "-n", default='testing_ap10k_zeroshot',
                         help="experiment name. A folder with this name will be created in the log_path.",
                         type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
     parser.add_argument("--batch_size", "-b", help="batch size", type=int, default=16)
