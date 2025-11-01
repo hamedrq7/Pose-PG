@@ -96,7 +96,6 @@ if __name__ == '__main__':
     """
     Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), without re indexing: 
     
-
     Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
     
     """
