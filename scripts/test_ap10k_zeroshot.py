@@ -78,7 +78,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_name", "-n", default='testing_ap10k_zeroshot',
                         help="experiment name. A folder with this name will be created in the log_path.",
-                        type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
+                        type=str, # default=str(datetime.now().strftime("%Y%m%d_%H%M"))
+                        )
     parser.add_argument("--batch_size", "-b", help="batch size", type=int, default=16)
     parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--pretrained_weight_path", "-p",
