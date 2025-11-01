@@ -1,8 +1,28 @@
 import torch
+import torch.nn as nn 
 import random 
 import numpy as np 
 from models_.poseresnet import PoseResNet
 from models_.hrnet import HRNet
+
+class ReIndexWrapper(nn.Module):
+    def __init__(self, model, index_map):
+        super().__init__()
+        self.model = model
+        self.index_map = index_map
+    
+    def forward(self, input):
+        normal_input = self.model(input)
+        return normal_input[:, self.index_map, :, :]
+
+def re_index_model_output(model, index_map): 
+    # Assuming model is trained on COCO: 
+    """
+    For COCO -> Ap10K, a naive way is this
+    index_map = [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]
+    reordered_output = output[:, index_map, :, :]
+    """
+    return ReIndexWrapper(model, index_map)
 
 def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, pretrained_weight_path=None): 
     # load model

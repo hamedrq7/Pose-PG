@@ -10,7 +10,7 @@ from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 from misc.checkpoint import load_checkpoint
 from misc.utils import flip_tensor, flip_back, get_final_preds
 from misc.visualization import save_images
-from misc.general_utils import get_device, get_model
+from misc.general_utils import get_device, get_model, modify_output_channels
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 
@@ -39,6 +39,7 @@ class Test(object):
                  pre_trained_only=False,
                  pretrained_weight_path=None,
                  model_name = 'hrnet',
+                 zero_shot_testing = False
                  ):
         """
         Initializes a new Test object.
@@ -84,7 +85,9 @@ class Test(object):
 
         self.model = get_model(model_name=model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints,
             model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=pretrained_weight_path)
-        
+        if zero_shot_testing: 
+            self.model = modify_output_channels(self.model, [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16])
+
         # define loss
         if self.loss == 'JointsMSELoss':
             self.loss_fn = JointsMSELoss().to(self.device)
