@@ -39,7 +39,8 @@ class Test(object):
                  pre_trained_only=False,
                  pretrained_weight_path=None,
                  model_name = 'hrnet',
-                 re_order_index = False
+                 re_order_index = False,
+                 log_path = 'no_log_path_given'
                  ):
         """
         Initializes a new Test object.
@@ -80,6 +81,7 @@ class Test(object):
         self.model_bn_momentum = model_bn_momentum
         self.flip_test_images = flip_test_images
         self.epoch = 0
+        self.log_path = log_path
 
         self.device = get_device(device)
 
@@ -173,7 +175,7 @@ class Test(object):
         print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
         print('\nVal AP/AR')
         AP_res = self.ds_test.evaluate( 
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder='/')
+            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=f'{self.log_path}')
         
         print('AP: ', AP_res)
 

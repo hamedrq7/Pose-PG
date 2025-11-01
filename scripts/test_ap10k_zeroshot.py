@@ -25,7 +25,8 @@ def main(exp_name,
          seed=1,
          device=None,
          model_name = 'hrnet',
-         disable_reindexing=False
+         disable_reindexing=False,
+         log_path = 'no_log_path_given'
          ):
 
     set_seed_reproducability(seed=seed)
@@ -67,7 +68,8 @@ def main(exp_name,
         pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
         model_name=model_name,
-        re_order_index=not disable_reindexing
+        re_order_index=not disable_reindexing,
+        log_path = log_path
     )
     test.run()
 
@@ -90,7 +92,8 @@ if __name__ == '__main__':
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
     parser.add_argument("--disable_reindexing", help="disables reindexing of output channels", action="store_true")
-
+    parser.add_argument("--log_path", help="To store coco json results", type=str)
+    
     args = parser.parse_args()
 
     """
