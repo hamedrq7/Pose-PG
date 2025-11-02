@@ -10,4 +10,3 @@
 
 python scripts/test_coco_robustness.py --batch_size 16 --model_c 50 --model_name poseresnet --pretrained_weight_path '/mnt/data/hossein/Hossein_workspace/nips_cetra/hamed/exps/UsingMyCustomDataset_AndOtherSetting_Madry_adversarial_eps8_R50_Sigma2/20251029_1721/checkpoint_best_mAP.pth'
 python scripts/test_coco_robustness.py --batch_size 16 --model_c 50 --model_name poseresnet --pretrained_weight_path '/mnt/data/hossein/Hossein_workspace/nips_cetra/hamed/exps/UsingMyCustomDataset_AndOtherSetting_ST_R50_Sigma2/20251031_1656/checkpoint_best_mAP.pth'
-

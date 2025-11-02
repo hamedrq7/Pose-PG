@@ -260,8 +260,6 @@ class TestRobust(object):
                 adv_mean_acc_test += adv_avg_acc.item()
 
                 idx += num_images
-                if step > 2:
-                  break
 
         cln_mean_loss_test /= self.len_dl_test
         cln_mean_acc_test /= self.len_dl_test
