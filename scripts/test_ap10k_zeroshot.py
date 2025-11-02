@@ -125,31 +125,39 @@ if __name__ == '__main__':
     ############################################################################################################################################
     #  Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
     ############################################################################################################################################
-    Per joint PCK acc (thr = 0.05) (Total=0.0791612754543591)
-    L_Eye :  0.1155  | R_Eye :  0.1310  | Nose :  0.1594  | Neck :  0.0529  | Root of tail :  0.0193  | L_Shoulder :  0.0638  | L_Elbow :  0.0541  | L_F_Paw :  0.1225  | R_Shoulder :  0.0786  | R_Elbow :  0.0546  | R_F_Paw :  0.1256  | L_Hip :  0.0474  | L_Knee :  0.0706  | L_B_Paw :  0.0782  | R_Hip :  0.0387  | R_Knee :  0.0668  | R_B_Paw :  0.0645  | 
-    Per joint PCK acc (thr = 0.2) (Total=0.4297629924371652)
-    L_Eye :  0.6597  | R_Eye :  0.6840  | Nose :  0.5841  | Neck :  0.5001  | Root of tail :  0.2048  | L_Shoulder :  0.3522  | L_Elbow :  0.3522  | L_F_Paw :  0.3332  | R_Shoulder :  0.3934  | R_Elbow :  0.3912  | R_F_Paw :  0.3380  | L_Hip :  0.4326  | L_Knee :  0.4324  | L_B_Paw :  0.3630  | R_Hip :  0.4431  | R_Knee :  0.4718  | R_B_Paw :  0.3686  | 
-    Per joint PCK acc (thr = 0.5) (Total=0.8954365478229217)
-    L_Eye :  0.9502  | R_Eye :  0.9556  | Nose :  0.9014  | Neck :  0.9522  | Root of tail :  0.8058  | L_Shoulder :  0.8961  | L_Elbow :  0.8643  | L_F_Paw :  0.7858  | R_Shoulder :  0.9225  | R_Elbow :  0.8730  | R_F_Paw :  0.7696  | L_Hip :  0.9387  | L_Knee :  0.9579  | L_B_Paw :  0.8695  | R_Hip :  0.9411  | R_Knee :  0.9506  | R_B_Paw :  0.8911  | 
+    Per joint PCK acc (thr = 0.05) (Total=0.07323529618359581)
+    L_Eye :  0.1190  | R_Eye :  0.1374  | Nose :  0.1244  | Neck :  0.0589  | Root of tail :  0.0292  | L_Shoulder :  0.0621  | L_Elbow :  0.0571  | L_F_Paw :  0.0950  | R_Shoulder :  0.0615  | R_Elbow :  0.0419  | R_F_Paw :  0.1056  | L_Hip :  0.0405  | L_Knee :  0.0710  | L_B_Paw :  0.0632  | R_Hip :  0.0449  | R_Knee :  0.0750  | R_B_Paw :  0.0570  | 
+    Per joint PCK acc (thr = 0.2) (Total=0.4107688115091608)
+    L_Eye :  0.6417  | R_Eye :  0.6305  | Nose :  0.5452  | Neck :  0.5293  | Root of tail :  0.1767  | L_Shoulder :  0.3468  | L_Elbow :  0.3385  | L_F_Paw :  0.2636  | R_Shoulder :  0.3699  | R_Elbow :  0.3568  | R_F_Paw :  0.3208  | L_Hip :  0.4489  | L_Knee :  0.4443  | L_B_Paw :  0.3506  | R_Hip :  0.4235  | R_Knee :  0.4605  | R_B_Paw :  0.3369  | 
+    Per joint PCK acc (thr = 0.5) (Total=0.8853657522862486)
+    L_Eye :  0.9551  | R_Eye :  0.9439  | Nose :  0.8992  | Neck :  0.9428  | Root of tail :  0.7931  | L_Shoulder :  0.9021  | L_Elbow :  0.8595  | L_F_Paw :  0.7497  | R_Shoulder :  0.9150  | R_Elbow :  0.8378  | R_F_Paw :  0.7584  | L_Hip :  0.9327  | L_Knee :  0.9348  | L_B_Paw :  0.8649  | R_Hip :  0.9219  | R_Knee :  0.9633  | R_B_Paw :  0.8802  | 
 
-    Test: Loss 0.001199 
+    Test: Loss 0.001183 - Accuracy 0.073235
 
-    Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.001
-    Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.007
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.000
+    Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.003
     Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
     Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
-    Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.001
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.000
     Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.002
     Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.011
     Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
     Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
     Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.002
-    AP:  OrderedDict({'AP': np.float64(0.001012971001533651), 'AP .5': np.float64(0.006532350279362911), 'AP .75': np.float64(0.0), 'AP (M)': np.float64(0.0), 'AP (L)': np.float64(0.0010196919691969196), 'AR': np.float64(0.0018736677115987462), 'AR .5': np.float64(0.011384883315917799), 'AR .75': np.float64(0.0), 'AR (M)': np.float64(0.0), 'AR (L)': np.float64(0.0018932109702724396)})
+    AP:  OrderedDict([('AP', 0.00047281942479962275), ('AP .5', 0.0032338519566242336), ('AP .75', 0.0), ('AP (M)', 0.0), ('AP (L)', 0.0004732164569840442), ('AR', 0.002022957157784744), ('AR .5', 0.010694461859979102), ('AR .75', 0.0), ('AR (M)', 0.0), ('AR (L)', 0.002031843504085278)])
 
     ############################################################################################################################################
     # Results for Validation set of Ap10k on a COCO trained poseresnet (with adversarial pretraining) (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
     ############################################################################################################################################
-    Test: Loss 0.001194 - Accuracy 0.072974
+    Per joint PCK acc (thr = 0.05) (Total=0.07289190866408238)
+    L_Eye :  0.0845  | R_Eye :  0.1399  | Nose :  0.1259  | Neck :  0.0603  | Root of tail :  0.0260  | L_Shoulder :  0.0633  | L_Elbow :  0.0594  | L_F_Paw :  0.0980  | R_Shoulder :  0.0674  | R_Elbow :  0.0406  | R_F_Paw :  0.0990  | L_Hip :  0.0626  | L_Knee :  0.0791  | L_B_Paw :  0.0615  | R_Hip :  0.0272  | R_Knee :  0.0807  | R_B_Paw :  0.0631  | 
+    Per joint PCK acc (thr = 0.2) (Total=0.4303573295661991)
+    L_Eye :  0.6264  | R_Eye :  0.6379  | Nose :  0.5687  | Neck :  0.5219  | Root of tail :  0.2119  | L_Shoulder :  0.3535  | L_Elbow :  0.3665  | L_F_Paw :  0.3166  | R_Shoulder :  0.3809  | R_Elbow :  0.3718  | R_F_Paw :  0.3223  | L_Hip :  0.4539  | L_Knee :  0.4756  | L_B_Paw :  0.3891  | R_Hip :  0.4298  | R_Knee :  0.5167  | R_B_Paw :  0.3736  | 
+    Per joint PCK acc (thr = 0.5) (Total=0.8950453297170899)
+    L_Eye :  0.9543  | R_Eye :  0.9532  | Nose :  0.9076  | Neck :  0.9554  | Root of tail :  0.8310  | L_Shoulder :  0.8959  | L_Elbow :  0.8845  | L_F_Paw :  0.7688  | R_Shoulder :  0.8990  | R_Elbow :  0.8762  | R_F_Paw :  0.7758  | L_Hip :  0.9329  | L_Knee :  0.9412  | L_B_Paw :  0.8661  | R_Hip :  0.9334  | R_Knee :  0.9624  | R_B_Paw :  0.8823  | 
+
+    Test: Loss 0.001194 - Accuracy 0.072892
+
     Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.002
     Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.009
     Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
@@ -161,7 +169,6 @@ if __name__ == '__main__':
     Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
     Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.004
     AP:  OrderedDict([('AP', 0.0016305202612255914), ('AP .5', 0.008693227128993305), ('AP .75', 0.0), ('AP (M)', 0.0), ('AP (L)', 0.001645588309383791), ('AR', 0.004431502405284832), ('AR .5', 0.023863123926356547), ('AR .75', 0.0), ('AR (M)', 0.0), ('AR (L)', 0.00445558325959452)])
-
     """
         
     main(**args.__dict__)

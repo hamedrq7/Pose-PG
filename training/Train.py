@@ -17,7 +17,7 @@ from misc.visualization import save_images
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from misc.log_utils import Logger 
-from misc.general_utils import get_model, get_device
+from misc.general_utils import get_model, get_device, get_loss_fn
 
 class Train(object):
     """
@@ -159,7 +159,7 @@ class Train(object):
         command = " ".join(command_line_args)
         print(f"The command that ran this script: {command}")
 
-        model = get_model(model_name=self.model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints, 
+        self.model = get_model(model_name=self.model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints, 
                           model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=self.pretrained_weight_path)
 
         # load previous checkpoint
@@ -174,13 +174,7 @@ class Train(object):
         else:
             self.starting_epoch = 0
 
-        # define loss and optimizers
-        if self.loss == 'JointsMSELoss':
-            self.loss_fn = JointsMSELoss().to(self.device)
-        elif self.loss == 'JointsOHKMMSELoss':
-            self.loss_fn = JointsOHKMMSELoss().to(self.device)
-        else:
-            raise NotImplementedError
+        self.loss_fn = get_loss_fn(self.loss, self.device)
 
         if optimizer == 'SGD':
             self.optim = SGD(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay,

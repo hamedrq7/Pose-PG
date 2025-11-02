@@ -10,7 +10,7 @@ from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 from misc.checkpoint import load_checkpoint
 from misc.utils import flip_tensor, flip_back, get_final_preds
 from misc.visualization import save_images
-from misc.general_utils import get_device, get_model, re_index_model_output
+from misc.general_utils import get_device, get_model, re_index_model_output, get_loss_fn
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
@@ -95,13 +95,7 @@ class Test(object):
         if re_order_index: 
             self.model = re_index_model_output(self.model, [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16])
 
-        # define loss
-        if self.loss == 'JointsMSELoss':
-            self.loss_fn = JointsMSELoss().to(self.device)
-        elif self.loss == 'JointsOHKMMSELoss':
-            self.loss_fn = JointsOHKMMSELoss().to(self.device)
-        else:
-            raise NotImplementedError
+        self.loss_fn = get_loss_fn(self.loss, self.device)
         
         # load test dataset
         self.dl_test = DataLoader(self.ds_test, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers)
