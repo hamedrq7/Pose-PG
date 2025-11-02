@@ -28,7 +28,7 @@ class Test(object):
 
     def __init__(self,
                  ds_test,
-                 batch_size=1,
+                 batch_size=16,
                  num_workers=4,
                  loss='JointsMSELoss',
                  checkpoint_path=None,
@@ -112,6 +112,7 @@ class Test(object):
         self.mean_loss_test = 0.
         self.mean_acc_test = 0.
         self.per_joint_pck_accs = {x: [] for x in self.pck_thresholds}
+        self.pck_accs = {x: [] for x in self.pck_thresholds}
 
     def _test(self):
         num_samples = len(self.ds_test)
@@ -139,13 +140,14 @@ class Test(object):
                 loss = self.loss_fn(output, target, target_weight)
 
                 # Evaluate accuracy
-                for pck_thr in self.pck_thresholds: 
+                for pck_thr in self.pck_thresholds[::-1]: 
                     accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
                                                             target.detach().cpu().numpy(), 
                                                             mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
-                                                            thr=0.05)
-                    self.per_joint_pck_accs.append(accs)
-
+                                                            thr=pck_thr)
+                    self.per_joint_pck_accs[pck_thr].append(accs)
+                    self.pck_accs[pck_thr].append(avg_acc)
+                    
                 num_images = image.shape[0]
 
                 # measure elapsed time
@@ -182,7 +184,16 @@ class Test(object):
 
         self.mean_loss_test /= self.len_dl_test
         self.mean_acc_test /= self.len_dl_test
-        self.per_joint_pck_accs = np.array(self.per_joint_pck_accs).sum(1)
+
+        for thr in self.pck_thresholds: 
+            self.per_joint_pck_accs[thr] = np.array(self.per_joint_pck_accs[thr])
+            self.pck_accs[thr] = np.array(self.pck_accs[thr])
+            print(f'Per joint PCK acc (thr = {thr}) (Total={self.pck_accs[thr].mean()})')
+            for joint in range(self.model_nof_joints):
+                temp = self.per_joint_pck_accs[thr][:, joint]
+                temp = temp[temp >= 0] # the pck values are negative when joint is not visible
+                print(self.ds_test.dataset_info.keypoint_info[joint]['name'], ': ', f'{temp.mean():.4f}', ' | ', end='')
+            print()
 
         print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
         print('\nVal AP/AR')
@@ -190,8 +201,6 @@ class Test(object):
             all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=f'{self.log_path}')
         
         print('AP: ', AP_res)
-
-        print('Per joint PCK acc, ')
     def run(self):
         """
         Runs the test.

@@ -93,15 +93,46 @@ if __name__ == '__main__':
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
     parser.add_argument("--disable_reindexing", help="disables reindexing of output channels", action="store_true")
-    parser.add_argument("--log_path", help="To store coco json results", type=str)
     
     args = parser.parse_args()
 
     """
-    ## Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), without re indexing: 
+    ############################################################################################################################################
+    # Results for Validation set of Ap10k on a Ap10k trained poseresnet (256x192):
+    ############################################################################################################################################
+    Per joint PCK acc (thr = 0.05) (Total=0.7588883736089619)
+    L_Eye :  0.9464  | R_Eye :  0.9337  | Nose :  0.9218  | Neck :  0.6342  | Root of tail :  0.7101  | L_Shoulder :  0.7271  | L_Elbow :  0.7695  | L_F_Paw :  0.7638  | R_Shoulder :  0.7149  | R_Elbow :  0.7517  | R_F_Paw :  0.7778  | L_Hip :  0.6487  | L_Knee :  0.7373  | L_B_Paw :  0.7313  | R_Hip :  0.6368  | R_Knee :  0.7332  | R_B_Paw :  0.7648  | 
+    Per joint PCK acc (thr = 0.2) (Total=0.9588205504921957)
+    L_Eye :  0.9845  | R_Eye :  0.9772  | Nose :  0.9702  | Neck :  0.9580  | Root of tail :  0.9497  | L_Shoulder :  0.9789  | L_Elbow :  0.9767  | L_F_Paw :  0.9386  | R_Shoulder :  0.9657  | R_Elbow :  0.9701  | R_F_Paw :  0.9421  | L_Hip :  0.9612  | L_Knee :  0.9679  | L_B_Paw :  0.9272  | R_Hip :  0.9384  | R_Knee :  0.9609  | R_B_Paw :  0.9338  | 
+    Per joint PCK acc (thr = 0.5) (Total=0.9957077627999045)
+    L_Eye :  0.9970  | R_Eye :  0.9940  | Nose :  0.9928  | Neck :  0.9992  | Root of tail :  0.9858  | L_Shoulder :  0.9989  | L_Elbow :  0.9967  | L_F_Paw :  0.9906  | R_Shoulder :  0.9989  | R_Elbow :  0.9964  | R_F_Paw :  0.9888  | L_Hip :  0.9982  | L_Knee :  0.9979  | L_B_Paw :  0.9986  | R_Hip :  1.0000  | R_Knee :  0.9979  | R_B_Paw :  0.9954  | 
+
+    Test: Loss 0.000419 
+
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.663
+    Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.920
+    Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.733
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.488
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.667
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.695
+    Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.928
+    Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.767
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.490
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.699
+    AP:  OrderedDict({'AP': np.float64(0.6625704485932365), 'AP .5': np.float64(0.9197174888663397), 'AP .75': np.float64(0.7329650645631968), 'AP (M)': np.float64(0.4877253109926377), 'AP (L)': np.float64(0.6670563986606942), 'AR': np.float64(0.6952762716660131), 'AR .5': np.float64(0.9279612579086384), 'AR .75': np.float64(0.766539536062012), 'AR (M)': np.float64(0.49), 'AR (L)': np.float64(0.698524843386261)})
     
-    ## Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
-    Test: Loss 0.001199 - Accuracy 0.079253
+    ############################################################################################################################################
+    #  Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
+    ############################################################################################################################################
+    Per joint PCK acc (thr = 0.05) (Total=0.0791612754543591)
+    L_Eye :  0.1155  | R_Eye :  0.1310  | Nose :  0.1594  | Neck :  0.0529  | Root of tail :  0.0193  | L_Shoulder :  0.0638  | L_Elbow :  0.0541  | L_F_Paw :  0.1225  | R_Shoulder :  0.0786  | R_Elbow :  0.0546  | R_F_Paw :  0.1256  | L_Hip :  0.0474  | L_Knee :  0.0706  | L_B_Paw :  0.0782  | R_Hip :  0.0387  | R_Knee :  0.0668  | R_B_Paw :  0.0645  | 
+    Per joint PCK acc (thr = 0.2) (Total=0.4297629924371652)
+    L_Eye :  0.6597  | R_Eye :  0.6840  | Nose :  0.5841  | Neck :  0.5001  | Root of tail :  0.2048  | L_Shoulder :  0.3522  | L_Elbow :  0.3522  | L_F_Paw :  0.3332  | R_Shoulder :  0.3934  | R_Elbow :  0.3912  | R_F_Paw :  0.3380  | L_Hip :  0.4326  | L_Knee :  0.4324  | L_B_Paw :  0.3630  | R_Hip :  0.4431  | R_Knee :  0.4718  | R_B_Paw :  0.3686  | 
+    Per joint PCK acc (thr = 0.5) (Total=0.8954365478229217)
+    L_Eye :  0.9502  | R_Eye :  0.9556  | Nose :  0.9014  | Neck :  0.9522  | Root of tail :  0.8058  | L_Shoulder :  0.8961  | L_Elbow :  0.8643  | L_F_Paw :  0.7858  | R_Shoulder :  0.9225  | R_Elbow :  0.8730  | R_F_Paw :  0.7696  | L_Hip :  0.9387  | L_Knee :  0.9579  | L_B_Paw :  0.8695  | R_Hip :  0.9411  | R_Knee :  0.9506  | R_B_Paw :  0.8911  | 
+
+    Test: Loss 0.001199 
+
     Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.001
     Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.007
     Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
@@ -112,10 +143,11 @@ if __name__ == '__main__':
     Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
     Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
     Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.002
-    AP:  OrderedDict([('AP', 0.0010109225208235109), ('AP .5', 0.0065118654722615115), ('AP .75', 0.0), ('AP (M)', 0.0), ('AP (L)', 0.0010163916391639164), ('AR', 0.0018181121560431905), ('AR .5', 0.010829327760362243), ('AR .75', 0.0), ('AR (M)', 0.0), ('AR (L)', 0.001832604909666379)])
+    AP:  OrderedDict({'AP': np.float64(0.001012971001533651), 'AP .5': np.float64(0.006532350279362911), 'AP .75': np.float64(0.0), 'AP (M)': np.float64(0.0), 'AP (L)': np.float64(0.0010196919691969196), 'AR': np.float64(0.0018736677115987462), 'AR .5': np.float64(0.011384883315917799), 'AR .75': np.float64(0.0), 'AR (M)': np.float64(0.0), 'AR (L)': np.float64(0.0018932109702724396)})
 
-
-    ## Results for Validation set of Ap10k on a COCO trained poseresnet (with adversarial pretraining) (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
+    ############################################################################################################################################
+    # Results for Validation set of Ap10k on a COCO trained poseresnet (with adversarial pretraining) (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
+    ############################################################################################################################################
     Test: Loss 0.001194 - Accuracy 0.072974
     Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.002
     Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.009

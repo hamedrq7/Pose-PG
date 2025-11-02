@@ -175,6 +175,7 @@ AP10K_channel_cfg = dict(
 AP10K_data_cfg = dict(
     image_size=[256, 256],
     heatmap_size=[64, 64],
+    heatmap_sigma=2.,
     num_output_channels=AP10K_channel_cfg['num_output_channels'],
     num_joints=AP10K_channel_cfg['dataset_joints'],
     dataset_channel=AP10K_channel_cfg['dataset_channel'],
