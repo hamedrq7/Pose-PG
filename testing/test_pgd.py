@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 
 from misc.visualization import joints_dict
 import matplotlib.pyplot as plt 
+from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
 
 mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
 std  = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
@@ -162,14 +163,22 @@ def get_and_report(model, ds, loss_fn, X, y, y_targeted, joints_data, num_sample
 
     output = model(X)
     loss = loss_fn(output, y, y_targeted)
-    accs, avg_acc, cnt, joints_preds, joints_target = \
-        ds.evaluate_accuracy(output, y)
+    accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
+                                        y.detach().cpu().numpy(), 
+                                        mask=y_targeted.detach().cpu().numpy().squeeze(-1) > 0,
+                                        thr=0.05)
     
-    preds, maxvals = get_final_preds(True, output.detach(), c, s,
-                                        pixel_std)  
+    preds, maxvals = keypoints_from_heatmaps(
+        heatmaps=output.detach().cpu().numpy(),
+        center=c, 
+        scale=s,
+        post_process="default", 
+        kernel=11, # if ds.heatmap_sigma == 2. else 17, # carefull 
+        target_type="GaussianHeatmap",
+    ) 
     
-    all_preds[:, :, 0:2] = preds[:, :, 0:2].detach().cpu().numpy()
-    all_preds[:, :, 2:3] = maxvals.detach().cpu().numpy()
+    all_preds[:, :, 0:2] = preds[:, :, 0:2] # .detach().cpu().numpy()
+    all_preds[:, :, 2:3] = maxvals # .detach().cpu().numpy()
     all_boxes[:, 0:2] = c[:, 0:2]
     all_boxes[:, 2:4] = s[:, 0:2]
     all_boxes[:, 4] = np.prod(s * pixel_std, 1)

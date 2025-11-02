@@ -13,6 +13,7 @@ from misc.visualization import save_images
 from misc.general_utils import get_device, get_model, re_index_model_output
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
+from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
 
 import numpy as np 
 
@@ -40,7 +41,8 @@ class Test(object):
                  pretrained_weight_path=None,
                  model_name = 'hrnet',
                  re_order_index = False,
-                 log_path = 'no_log_path_given'
+                 log_path = 'no_log_path_given',
+                 pck_thresholds = [0.05, 0.2, 0.5]
                  ):
         """
         Initializes a new Test object.
@@ -82,6 +84,7 @@ class Test(object):
         self.flip_test_images = flip_test_images
         self.epoch = 0
         self.log_path = log_path
+        self.pck_thresholds = pck_thresholds
 
         self.device = get_device(device)
 
@@ -108,6 +111,7 @@ class Test(object):
         # initialize variables
         self.mean_loss_test = 0.
         self.mean_acc_test = 0.
+        self.per_joint_pck_accs = {x: [] for x in self.pck_thresholds}
 
     def _test(self):
         num_samples = len(self.ds_test)
@@ -135,9 +139,12 @@ class Test(object):
                 loss = self.loss_fn(output, target, target_weight)
 
                 # Evaluate accuracy
-                # Get predictions on the input
-                accs, avg_acc, cnt, joints_preds, joints_target = \
-                    self.ds_test.evaluate_accuracy(output, target)
+                for pck_thr in self.pck_thresholds: 
+                    accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
+                                                            target.detach().cpu().numpy(), 
+                                                            mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
+                                                            thr=0.05)
+                    self.per_joint_pck_accs.append(accs)
 
                 num_images = image.shape[0]
 
@@ -148,12 +155,17 @@ class Test(object):
                 pixel_std = 200  # ToDo Parametrize this
                 bbox_id = joints_data['bbox_id'].numpy()
 
-                
-                preds, maxvals = get_final_preds(True, output, c, s,
-                                                 pixel_std)  # ToDo check what post_processing exactly does
+                preds, maxvals = keypoints_from_heatmaps(
+                    heatmaps=output.detach().cpu().numpy(),
+                    center=c, 
+                    scale=s,
+                    post_process="default", 
+                    kernel=11, #  if self.ds_test.heatmap_sigma == 2. else 17, # carefull 
+                    target_type="GaussianHeatmap",
+                )
 
-                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2].detach().cpu().numpy()
-                all_preds[idx:idx + num_images, :, 2:3] = maxvals.detach().cpu().numpy()
+                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2] # .detach().cpu().numpy()
+                all_preds[idx:idx + num_images, :, 2:3] = maxvals # .detach().cpu().numpy()
                 # double check this all_boxes parts
                 all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
                 all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
@@ -168,11 +180,9 @@ class Test(object):
                 self.mean_loss_test += loss.item()
                 self.mean_acc_test += avg_acc.item()
 
-                # if step == 0:
-                #     save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'])
-
         self.mean_loss_test /= self.len_dl_test
         self.mean_acc_test /= self.len_dl_test
+        self.per_joint_pck_accs = np.array(self.per_joint_pck_accs).sum(1)
 
         print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
         print('\nVal AP/AR')
@@ -181,6 +191,7 @@ class Test(object):
         
         print('AP: ', AP_res)
 
+        print('Per joint PCK acc, ')
     def run(self):
         """
         Runs the test.

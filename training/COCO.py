@@ -6,6 +6,7 @@ from datasets.HumanPoseEstimation import HumanPoseEstimationDataset
 from misc.utils import flip_tensor, flip_back, get_final_preds
 from misc.visualization import save_images
 from training.Train import Train
+from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
 
 
 class COCOTrain(Train):
@@ -148,9 +149,10 @@ class COCOTrain(Train):
             self.optim.step()
 
             # Evaluate accuracy
-            # Get predictions on the resized images (given as input)
-            accs, avg_acc, cnt, joints_preds, joints_target = \
-                self.ds_train.evaluate_accuracy(output, target)
+            accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
+                                                       target.detach().cpu().numpy(), 
+                                                       mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
+                                                       thr=0.05)
 
             # Original
             num_images = image.shape[0]
@@ -163,11 +165,17 @@ class COCOTrain(Train):
             bbox_id = None if not 'bbox_id' in joints_data.keys() else joints_data['bbox_id'].numpy()
 
             # Get predictions on the original imagee
-            preds, maxvals = get_final_preds(True, output.detach(), c, s,
-                                             pixel_std)  # ToDo check what post_processing exactly does
-
-            all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2].detach().cpu().numpy()
-            all_preds[idx:idx + num_images, :, 2:3] = maxvals.detach().cpu().numpy()
+            preds, maxvals = keypoints_from_heatmaps(
+                    heatmaps=output.detach().cpu().numpy(),
+                    center=c, 
+                    scale=s,
+                    post_process="default", 
+                    kernel=11, #  if self.ds_train.heatmap_sigma == 2. else 17, # carefull 
+                    target_type="GaussianHeatmap",
+                )
+            
+            all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2] # .detach().cpu().numpy()
+            all_preds[idx:idx + num_images, :, 2:3] = maxvals # .detach().cpu().numpy()
             all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
             all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
             all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
@@ -205,9 +213,9 @@ class COCOTrain(Train):
                                             global_step=self.epoch)
             self.summary_writer.add_scalar('train_mAP', self.mAP_train_list[-1],
                                             global_step=self.epoch)
-            if self.epoch % 10 == 0: 
-                save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'],
-                            self.summary_writer, step=self.epoch, prefix='train_')
+            # if self.epoch % 10 == 0: 
+            #     save_images(image, target, joints_target, output, joints_preds, joints_data['joints_visibility'],
+            #                 self.summary_writer, step=self.epoch, prefix='train_')
                     
     def _val(self):
         running_loss = 0.0
@@ -240,8 +248,10 @@ class COCOTrain(Train):
 
                 # Evaluate accuracy
                 # Get predictions on the resized images (given as input)
-                accs, avg_acc, cnt, joints_preds, joints_target = \
-                    self.ds_val.evaluate_accuracy(output, target)
+                accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
+                                        target.detach().cpu().numpy(), 
+                                        mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
+                                        thr=0.05)
 
                 # Original
                 num_images = image.shape[0]
@@ -253,11 +263,17 @@ class COCOTrain(Train):
                 pixel_std = 200  # ToDo Parametrize this
                 bbox_id = None if not 'bbox_id' in joints_data.keys() else joints_data['bbox_id'].numpy()
 
-                preds, maxvals = get_final_preds(True, output, c, s,
-                                                 pixel_std)  # ToDo check what post_processing exactly does
+                preds, maxvals = keypoints_from_heatmaps(
+                    heatmaps=output.detach().cpu().numpy(),
+                    center=c, 
+                    scale=s,
+                    post_process="default", 
+                    kernel=11 if self.ds_test.heatmap_sigma == 2 else 17, # carefull 
+                    target_type="GaussianHeatmap",
+                )
 
-                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2].detach().cpu().numpy()
-                all_preds[idx:idx + num_images, :, 2:3] = maxvals.detach().cpu().numpy()
+                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2] # .detach().cpu().numpy()
+                all_preds[idx:idx + num_images, :, 2:3] = maxvals # .detach().cpu().numpy()
                 # double check this all_boxes parts
                 all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
                 all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
@@ -296,7 +312,7 @@ class COCOTrain(Train):
                                             global_step=self.epoch)
             self.summary_writer.add_scalar('val_mAP', self.mAP_val_list[-1],
                                             global_step=self.epoch)
-            if self.epoch % 10 == 0: 
-                save_images(image, target, joints_target, output, joints_preds,
-                            joints_data['joints_visibility'], self.summary_writer,
-                            step=self.epoch, prefix='val_')
+            # if self.epoch % 10 == 0: 
+            #     save_images(image, target, joints_target, output, joints_preds,
+            #                 joints_data['joints_visibility'], self.summary_writer,
+            #                 step=self.epoch, prefix='val_')

@@ -177,7 +177,8 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
         self.ann_info['skeleton'] = dataset_info.skeleton
         self.sigmas = dataset_info.sigmas
         self.dataset_name = dataset_info.dataset_name
-
+        self.heatmap_sigma = data_cfg['heatmap_sigma']
+        
         if coco_style:
             #@# the COCO object is in a package? 
             self.coco = COCO(ann_file)

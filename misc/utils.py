@@ -236,7 +236,6 @@ def evaluate_pck_accuracy(output, target, hm_type='gaussian', thr=0.5):
     else:
         raise NotImplementedError
     dists = calc_dists(pred, target, norm)
-    print('dists', dists)
 
     acc = torch.zeros(len(idx)).to(dists.device)
     avg_acc = 0

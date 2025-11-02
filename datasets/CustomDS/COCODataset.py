@@ -8,8 +8,9 @@ import numpy as np
 from xtcocotools.cocoeval import COCOeval
 
 from datasets.CustomDS.nms import oks_nms, soft_oks_nms
-
 from datasets.CustomDS.Kpt2dSviewRgbImgTopDownDataset import Kpt2dSviewRgbImgTopDownDataset
+
+from misc.utils import evaluate_pck_accuracy
 
 class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
     """CocoDataset dataset for top-down pose estimation.
@@ -230,7 +231,6 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
             accs, avg_acc, cnt, joints_preds, joints_target = evaluate_pck_accuracy(output, target, hm_type, thr)
             pass
         else:
-            from misc.utils import evaluate_pck_accuracy
             accs, avg_acc, cnt, joints_preds, joints_target = evaluate_pck_accuracy(output, target)
 
         return accs, avg_acc, cnt, joints_preds, joints_target

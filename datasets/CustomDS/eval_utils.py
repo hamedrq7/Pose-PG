@@ -215,7 +215,6 @@ def keypoint_pck_accuracy(pred, gt, mask, thr, normalize):
         - cnt (int): Number of valid keypoints.
     """
     distances = _calc_distances(pred, gt, mask, normalize)
-    print('dists', distances)
 
     acc = np.array([_distance_acc(d, thr) for d in distances])
     valid_acc = acc[acc >= 0]

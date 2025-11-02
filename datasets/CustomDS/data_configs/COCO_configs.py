@@ -200,6 +200,7 @@ COCO_channel_cfg = dict(
 COCO_data_cfg = dict(
     image_size=[192, 256],
     heatmap_size=[48, 64],
+    heatmap_sigma = 2.0, # for 256, 192 set to 2, for 385, X set to 3
     num_output_channels=COCO_channel_cfg['num_output_channels'],
     num_joints=COCO_channel_cfg['dataset_joints'],
     dataset_channel=COCO_channel_cfg['dataset_channel'],
@@ -237,7 +238,7 @@ COCO_train_pipeline = [
     NormalizeTensor(
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]),
-    TopDownGenerateTarget(sigma=2), 
+    TopDownGenerateTarget(sigma=COCO_data_cfg['heatmap_sigma']), 
     Collect(
         keys=['img', 'target', 'target_weight'],
         # meta_keys=[
@@ -260,7 +261,7 @@ COCO_val_pipeline = [
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225]
         ),
-    TopDownGenerateTarget(sigma=2), #### [?] 
+    TopDownGenerateTarget(sigma=COCO_data_cfg['heatmap_sigma']), #### [?] 
     Collect(
         # keys=['img'],
         # meta_keys=[
