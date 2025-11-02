@@ -93,7 +93,8 @@ if __name__ == '__main__':
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
     parser.add_argument("--disable_reindexing", help="disables reindexing of output channels", action="store_true")
-    
+    parser.add_argument("--log_path", help="log dir", type=str)
+
     args = parser.parse_args()
 
     """
