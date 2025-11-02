@@ -98,10 +98,37 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     """
-    Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), without re indexing: 
+    ## Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), without re indexing: 
     
-    Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
-    
+    ## Results for Validation set of Ap10k on a COCO trained poseresnet (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
+    Test: Loss 0.001199 - Accuracy 0.079253
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.001
+    Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.007
+    Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.001
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.002
+    Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.011
+    Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.002
+    AP:  OrderedDict([('AP', 0.0010109225208235109), ('AP .5', 0.0065118654722615115), ('AP .75', 0.0), ('AP (M)', 0.0), ('AP (L)', 0.0010163916391639164), ('AR', 0.0018181121560431905), ('AR .5', 0.010829327760362243), ('AR .75', 0.0), ('AR (M)', 0.0), ('AR (L)', 0.001832604909666379)])
+
+
+    ## Results for Validation set of Ap10k on a COCO trained poseresnet (with adversarial pretraining) (256x192), with this re indexing  [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]: 
+    Test: Loss 0.001194 - Accuracy 0.072974
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.002
+    Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.009
+    Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
+    Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.002
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  0.004
+    Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  0.024
+    Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  0.000
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  0.000
+    Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  0.004
+    AP:  OrderedDict([('AP', 0.0016305202612255914), ('AP .5', 0.008693227128993305), ('AP .75', 0.0), ('AP (M)', 0.0), ('AP (L)', 0.001645588309383791), ('AR', 0.004431502405284832), ('AR .5', 0.023863123926356547), ('AR .75', 0.0), ('AR (M)', 0.0), ('AR (L)', 0.00445558325959452)])
+
     """
         
     main(**args.__dict__)

@@ -153,17 +153,20 @@ def get_max_preds(batch_heatmaps):
 
 def get_final_preds(post_processing, batch_heatmaps, center, scale, pixel_std):
     coords, maxvals = get_max_preds(batch_heatmaps)
+    # coords: [N, K, 2]
+    # maxvals: [N, K, 1]
 
     heatmap_height = batch_heatmaps.shape[2]
     heatmap_width = batch_heatmaps.shape[3]
 
     # post-processing
+    # Does some sort of slight shifting in the predicted x and y's
     if post_processing:
-        for n in range(coords.shape[0]):
-            for p in range(coords.shape[1]):
-                hm = batch_heatmaps[n][p]
-                px = int(math.floor(coords[n][p][0] + 0.5))
-                py = int(math.floor(coords[n][p][1] + 0.5))
+        for n in range(coords.shape[0]): # for loop in batch size
+            for p in range(coords.shape[1]): # for loop in joints
+                hm = batch_heatmaps[n][p] # [heatmap_h, heatmap_w]
+                px = int(math.floor(coords[n][p][0] + 0.5)) # predicted x coord for joing p of sample n
+                py = int(math.floor(coords[n][p][1] + 0.5)) # predicted y coord for joing p of sample n
                 if 1 < px < heatmap_width - 1 and 1 < py < heatmap_height - 1:
                     diff = torch.tensor(
                         [
@@ -175,7 +178,7 @@ def get_final_preds(post_processing, batch_heatmaps, center, scale, pixel_std):
 
     preds = coords.clone()
 
-    # Transform back
+    # Transform the predicted x y coordinates in the heatmap_height and heatmap_width back to the image_size_height and width
     for i in range(coords.shape[0]):
         preds[i] = transform_preds(coords[i], center[i], scale[i], pixel_std, [heatmap_width, heatmap_height])
 
@@ -217,18 +220,23 @@ def evaluate_pck_accuracy(output, target, hm_type='gaussian', thr=0.5):
     First value to be returned is average accuracy across 'idxs',
     followed by individual accuracies
     """
-    idx = list(range(output.shape[1]))
+    idx = list(range(output.shape[1])) # index of joints
+
     if hm_type == 'gaussian':
-        pred, _ = get_max_preds(output)
-        target, _ = get_max_preds(target)
+        pred, _ = get_max_preds(output) # [N, K, 2]
+        target, _ = get_max_preds(target) # [N, K, 2]
+
         h = output.shape[2]
         w = output.shape[3]
-        norm = torch.ones((pred.shape[0], 2)) * torch.tensor([h, w],
-                                                             dtype=torch.float32) / 10  # Why they divide this by 10?
+
+        norm = torch.ones((pred.shape[0], 2)) * torch.tensor([h, w], dtype=torch.float32) # / 10  # Why they divide this by 10?
+        # print(norm.shape) # [N, 2]
+        # print(norm) # [N, 2] = [heatmap_h/10, heatmap_w/10] ?  
         norm = norm.to(output.device)
     else:
         raise NotImplementedError
     dists = calc_dists(pred, target, norm)
+    print('dists', dists)
 
     acc = torch.zeros(len(idx)).to(dists.device)
     avg_acc = 0
@@ -429,3 +437,35 @@ def find_person_id_associations(boxes, pts, prev_boxes, prev_pts, prev_person_id
     return boxes, pts, person_ids
 #
 #
+import sys 
+import os 
+sys.path.insert(1, os.getcwd())
+from datasets.CustomDS.eval_utils import _get_max_preds, pose_pck_accuracy
+
+if __name__ == "__main__": 
+    N = 4
+    K = 4
+    H_t, W_t = 64, 48
+    target_heatmap = torch.abs(torch.randn((N, K, H_t, W_t)))
+    batch_heatmaps = torch.abs(target_heatmap * torch.randn((N, K, H_t, W_t)))
+
+    ###### ITs a match ########
+    preds, max_vals = get_max_preds(batch_heatmaps=batch_heatmaps)    
+    preds, max_vals = _get_max_preds(batch_heatmaps.numpy())
+    ###########################
+
+    # center = torch.randint(0, 20, (N, 2)).numpy()
+    # scale = torch.abs(torch.randn((N, 2))).numpy()
+    # pixel_std = torch.ones((N, )).numpy() * 200
+
+    # preds, max_vals = get_final_preds(True, batch_heatmaps, center, scale, pixel_std)
+    # print(preds, max_vals)
+
+    acc, avg_acc, cnt, pred, target = evaluate_pck_accuracy(batch_heatmaps, target_heatmap)
+    print(avg_acc,'\n',  cnt,) # '\n',  pred,'\n',  target
+
+    print('---------------------')
+    mask = np.ones((N, K)).astype(np.bool_)
+    acc, avg_acc, cnt = pose_pck_accuracy(batch_heatmaps.numpy(), target_heatmap.numpy(), 
+                                                        mask=mask, thr=0.5, normalize=None)
+    print(avg_acc,'\n',  cnt,)
