@@ -20,7 +20,7 @@ import numpy as np
 from torch.autograd import Variable
 import torch.optim as optim
 
-def perturb(model, X, y, y_t, loss_fn, epsilon, num_steps, step_size, rand_init=False)
+def perturb(model, device, X, y, y_t, loss_fn, epsilon, num_steps, step_size, rand_init=False):
     X, y, y_t = Variable(X, requires_grad=True), Variable(y), Variable(y_t)
     X_pgd = Variable(X.data, requires_grad=True)
     
@@ -138,6 +138,7 @@ class TestRobust(object):
         self.len_dl_test = len(self.dl_test)
 
     def _test(self, epsilon: float, num_steps: int, step_size: float, attack: str = 'pgd'):
+        print(f'Running with eps {epsilon}, num_steps {num_steps}, step_size {step_size} attack {attack}')
         # initialize variables
         cln_mean_loss_test = 0.
         cln_mean_acc_test = 0.
@@ -218,7 +219,7 @@ class TestRobust(object):
                 cln_mean_acc_test += cln_avg_acc.item()
 
                 ##################################### ADV #####################################
-                adv_image = perturb(self.model, image, target, target_weight, self.loss_fn, 
+                adv_image = perturb(self.model, self.device, image, target, target_weight, self.loss_fn, 
                                     epsilon, num_steps, step_size, False)
                 adv_output = self.model(adv_image)
                 if self.flip_test_images:
@@ -259,6 +260,8 @@ class TestRobust(object):
                 adv_mean_acc_test += adv_avg_acc.item()
 
                 idx += num_images
+                if step > 2:
+                  break
 
         cln_mean_loss_test /= self.len_dl_test
         cln_mean_acc_test /= self.len_dl_test
@@ -303,13 +306,11 @@ class TestRobust(object):
         """
         Runs the test.
         """
-        self.mean_loss_test = 0.
-        self.mean_acc_test = 0.
-
-        #
         # Test
 
-        self._test(1/255., 10, 0.25/255, 'pgd')
-        self._test(2/255., 10, 0.5/255, 'pgd')
+        self._test(1/255., 20, 0.125/255, 'pgd')
+        self._test(2/255., 20, 0.25/255, 'pgd')
+        self._test(4/255., 20, 0.5/255, 'pgd')
+        self._test(8/255., 20, 1./255, 'pgd')
 
         print('\nTest ended @ %s' % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

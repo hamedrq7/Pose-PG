@@ -73,6 +73,7 @@ if __name__ == '__main__':
     parser.add_argument("--exp_name", "-n",
                         help="experiment name. A folder with this name will be created in the log_path.",
                         type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
+    
     parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--pretrained_weight_path", "-p",
                         help="pre-trained weight path. Weights will be loaded before training starts.",

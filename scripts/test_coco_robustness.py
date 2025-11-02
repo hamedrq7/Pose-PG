@@ -15,7 +15,7 @@ import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
 from datasets.CustomDS.augmentaions import NormalizeTensor
 
 def main(exp_name,
-         batch_size=1,
+         batch_size=16,
          num_workers=4,
          pretrained_weight_path=None,
          model_c=48,
@@ -87,7 +87,6 @@ def main(exp_name,
         model_bn_momentum=model_bn_momentum,
         flip_test_images=flip_test_images,
         device=device,
-        pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
         model_name=model_name
     )
@@ -99,6 +98,7 @@ if __name__ == '__main__':
     parser.add_argument("--exp_name", "-n",
                         help="experiment name. A folder with this name will be created in the log_path.",
                         type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
+    parser.add_argument("--batch_size", "-b", help="batch size", type=int, default=16)
     parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--pretrained_weight_path", "-p",
                         help="pre-trained weight path. Weights will be loaded before training starts.",

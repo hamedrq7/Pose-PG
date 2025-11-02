@@ -41,7 +41,7 @@ def get_loss_fn(loss: str, device, use_target_weight=True):
         loss_fn = JointsOHKMMSELoss(use_target_weight).to(device)
     else:
         raise NotImplementedError
-    
+    return loss_fn
     
 class ReIndexWrapper(nn.Module):
     def __init__(self, model, index_map):
