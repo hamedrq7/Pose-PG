@@ -13,6 +13,9 @@ develop-eggs/
 dist/
 downloads/
 datasets/COCO
+datasets/ap-10k
+no_log_path_given/
+temp/
 eggs/
 .eggs/
 lib/
