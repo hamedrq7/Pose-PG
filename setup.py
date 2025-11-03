@@ -23,10 +23,16 @@ if os.path.exists("requirements.txt"):
 else:
     print("\nNo requirements.txt found — skipping dependency installation.")
 
-print("\nAll downloads and setup complete.")
-
-# # Create directories
+import gdown
 os.makedirs("./downloads", exist_ok=True)
+
+def gdown_download(url, output_name):
+    if os.path.exists(output_name):
+        print(f"File already exists: {output_name}")
+    else:
+        gdown.download(url, output=f'{output_name}', quiet=False)
+    
+########################################  COCO  ########################################
 os.makedirs("./datasets/COCO", exist_ok=True)
 
 # COCO dataset
@@ -57,38 +63,40 @@ if not os.path.exists(coco_annotation_extract_dir):
 else:
     print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
 
-
-################# Model weights
-download_file(
-    "https://download.pytorch.org/models/resnet50-0676ba61.pth",
-    "./downloads/standard_resnet50.pth"
-)
-
-# Dropbox link with direct download enabled
-dropbox_url = "https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1"
-download_file(dropbox_url, "./downloads/madry_adversarial_resnet50.pt")
-
-# Poseresnet50 pretrained on COCO (256x192), 
-# from here https://drive.google.com/drive/folders/1hOTihvbyIxsm5ygDpbUuJ7O_tzv4oXjC 
-#           https://github.com/leoxiaobin/deep-high-resolution-net.pytorch?tab=readme-ov-file
-import gdown
-url = "https://drive.google.com/uc?id=1G5vwpkN6Dr7k1Y0mpo3Cai0uHklQzNmY"
-gdown.download(url, output='./downloads/pose_resnet_50_256x192.pth', quiet=False)
-
-# Hrnet 48 256x192, trained on COCO 
-url = "https://drive.google.com/uc?id=15T2XqPjW7Ex0uyC1miGVYUv7ULOxIyJI"
-gdown.download(url, output='./downloads/pose_hrnet_w48_256x192.pth', quiet=False)
-
-### AP10k
+########################################  AP10K  ########################################
 # download dataset
 url = "https://drive.google.com/uc?id=1-FNNGcdtAQRehYYkGY1y4wzFNg4iWNad"
 ap10_zip_path = "./downloads/ap-10k.zip"
-gdown.download(url, output=f'{ap10_zip_path}', quiet=False)
+gdown_download(url, ap10_zip_path)
 
 if not os.path.exists("./downloads/ap-10k"):
     run(f"unzip -q -n {ap10_zip_path} -d ./datasets")
 else:
     print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
+
+########################################  Model Weights  ########################################
+# standard resnet50
+download_file(
+    "https://download.pytorch.org/models/resnet50-0676ba61.pth",
+    "./downloads/standard_resnet50.pth"
+)
+# madry adv_resnet50 linf 8
+dropbox_url = "https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1"
+download_file(dropbox_url, "./downloads/madry_adversarial_resnet50.pt")
+
+# madry adv_resnet50 linf 4
+dropbox_url = "https://www.dropbox.com/scl/fi/u04jwt1ms0pjh3a9luixy/imagenet_linf_4.pt?rlkey=1x79l70m0qx18erxy2yonjkwl&st=8hhaehmj&dl=1"
+download_file(dropbox_url, "./downloads/madry_adversarial_resnet50_linf4.pt")
+
+# Poseresnet50 pretrained on COCO (256x192), 
+# from here https://drive.google.com/drive/folders/1hOTihvbyIxsm5ygDpbUuJ7O_tzv4oXjC 
+#           https://github.com/leoxiaobin/deep-high-resolution-net.pytorch?tab=readme-ov-file
+url = "https://drive.google.com/uc?id=1G5vwpkN6Dr7k1Y0mpo3Cai0uHklQzNmY"
+gdown_download(url, './downloads/pose_resnet_50_256x192.pth')
+
+# Hrnet 48 256x192, trained on COCO 
+url = "https://drive.google.com/uc?id=15T2XqPjW7Ex0uyC1miGVYUv7ULOxIyJI"
+gdown_download(url, './downloads/pose_hrnet_w48_256x192.pth')
 
 # Poserenset50 pretrained on AP10K (256x256)
 download_file("https://download.openmmlab.com/mmpose/animal/resnet/res50_ap10k_256x256-35760eb8_20211029.pth", 
