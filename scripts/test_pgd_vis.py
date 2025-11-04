@@ -83,15 +83,15 @@ def plot_joints(out, X, name, res, nof):
     ## probmalatic:
     joints=joints[0]
 
-    fig = plt.figure(figsize=(60/2.54, 30/2.54))
-    ax = fig.add_subplot(121)
+    fig = plt.figure(figsize=(90/2.54, 30/2.54))
+    ax = fig.add_subplot(131)
     # ax.imshow((X[0]*std+mean).transpose(1, 2, 0))
     ax.imshow((X[0]).transpose(1, 2, 0))
-    ax = fig.add_subplot(122)
+    ax = fig.add_subplot(132)
     # ax.imshow((X[0]*std+mean).transpose(1, 2, 0))
-    ax.imshow((X[0]).transpose(1, 2, 0))
-    ax.imshow(np.ones_like(X[0]).transpose(1, 2, 0))
-    
+    # ax.imshow((X[0]).transpose(1, 2, 0))
+    ax.imshow(np.ones_like(X[0]).transpose(1, 2, 0))    
+
     bones = joints_dict()["coco"]["skeleton"]
     # bones = joints_dict()["mpii"]["skeleton"]
 
@@ -100,6 +100,10 @@ def plot_joints(out, X, name, res, nof):
         yS = [joints[:,bone[0],0], joints[:,bone[1],0]]
         ax.plot(xS, yS, linewidth=3, c=(0,0.3,0.7))
     ax.scatter(joints[:,:,1],joints[:,:,0], s=20, c='r')
+
+    # for heatmap
+    ax = fig.add_subplot(133)
+    ax.imshow(heatmaps[0].sum(0))
 
     plt.savefig(f'{name}.png')
     plt.clf()
@@ -277,29 +281,29 @@ def main(
     print(data_pipeline)
     # use diff joint weights to customize adv loss
     ds_info = COCO_configs.COCO_dataset_info
-    # ds_info['joint_weights'] = [
-    #     1., 1., 1., 1., 1., 1., 1., 1.2, 1.2, 1.5, 1.5, 1., 1., 1.2, 1.2, 1.5,
-    #     1.5
-    # ]
     ds_info['joint_weights'] = [
-        0., # nose
-        0., # left_eye
-        0., # right_eye
-        0., # left_ear
-        0., # right_ear
-        0., # left_shoulder
-        0., # right_shoulder
-        1., # left_elbow
-        1., # right_elbow
-        0., # left_wrist
-        0., # right_wrist
-        0., # left_hip
-        0., # right_hip
-        0., # left_knee
-        0., # right_knee
-        0., # left_ankle
-        0., # right_ankle
+        1., 1., 1., 1., 1., 1., 1., 1.2, 1.2, 1.5, 1.5, 1., 1., 1.2, 1.2, 1.5,
+        1.5
     ]
+    # ds_info['joint_weights'] = [
+    #     0., # nose
+    #     0., # left_eye
+    #     0., # right_eye
+    #     0., # left_ear
+    #     0., # right_ear
+    #     0., # left_shoulder
+    #     0., # right_shoulder
+    #     1., # left_elbow
+    #     1., # right_elbow
+    #     0., # left_wrist
+    #     0., # right_wrist
+    #     0., # left_hip
+    #     0., # right_hip
+    #     0., # left_knee
+    #     0., # right_knee
+    #     0., # left_ankle
+    #     0., # right_ankle
+    # ]
     ds_cfg = COCO_configs.COCO_data_cfg
     ds_cfg['use_different_joint_weights'] = True
     ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
