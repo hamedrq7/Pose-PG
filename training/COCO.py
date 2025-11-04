@@ -268,7 +268,7 @@ class COCOTrain(Train):
                     center=c, 
                     scale=s,
                     post_process="default", 
-                    kernel=11 if self.ds_test.heatmap_sigma == 2 else 17, # carefull 
+                    kernel=11., # if self.ds_val.heatmap_sigma == 2 else 17, # carefull 
                     target_type="GaussianHeatmap",
                 )
 
