@@ -306,9 +306,9 @@ class TestRobust(object):
         """
         # Test
 
-        # self._test(1/255., 20, 0.125/255, 'pgd')
-        # self._test(2/255., 20, 0.25/255, 'pgd')
-        # self._test(4/255., 20, 0.5/255, 'pgd')
-        self._test(8/255., 20, 1./255, 'pgd')
+        self._test(1/255., 20, 0.125/255, 'pgd')
+        self._test(2/255., 20, 0.25/255, 'pgd')
+        self._test(4/255., 20, 0.5/255, 'pgd')
+        # self._test(8/255., 20, 1./255, 'pgd')
 
         print('\nTest ended @ %s' % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
