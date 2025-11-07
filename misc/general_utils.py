@@ -89,18 +89,20 @@ def load_pretrained(model, pretrained_weight_path, device):
     # pretrained_weight_path = 'C:/Users/hamed/Downloads/resnet50-19c8e357.pth'
 
     ### The models from MadyLab are a bit weird 
-    if 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'schedule' in checkpoint.keys() and 'epoch' in checkpoint.keys() and len(checkpoint.keys()) == 4: 
+    if 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'schedule' in checkpoint.keys() and 'epoch' in checkpoint.keys():
+        if len(checkpoint.keys()) == 4 or ('amp' in checkpoint.keys() and len(checkpoint.keys()) == 5): 
         # https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1
+            print('Model trained from MadryLab...')
+            
+            state_dict = checkpoint["model"]
 
-        state_dict = checkpoint["model"]
-
-        # Remove "module.model." prefix
-        new_state_dict = {}
-        for k, v in state_dict.items():
-            if "attacker" not in k: 
-                new_key = k.replace("module.model.", "")
-                new_state_dict[new_key] = v
-                # print(k, new_key)
+            # Remove "module.model." prefix
+            new_state_dict = {}
+            for k, v in state_dict.items():
+                if "attacker" not in k: 
+                    new_key = k.replace("module.model.", "")
+                    new_state_dict[new_key] = v
+                    # print(k, new_key)
     
     ### Models from AP10-K repo (linked in their readme)
     elif 'meta' in checkpoint.keys() and 'mmcv_version' in checkpoint['meta']: 

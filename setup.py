@@ -88,6 +88,10 @@ download_file(dropbox_url, "./downloads/madry_adversarial_resnet50.pt")
 dropbox_url = "https://www.dropbox.com/scl/fi/u04jwt1ms0pjh3a9luixy/imagenet_linf_4.pt?rlkey=1x79l70m0qx18erxy2yonjkwl&st=8hhaehmj&dl=1"
 download_file(dropbox_url, "./downloads/madry_adversarial_resnet50_linf4.pt")
 
+# From here: https://huggingface.co/madrylab/robust-imagenet-models
+dropbox_url = "https://huggingface.co/madrylab/robust-imagenet-models/resolve/main/resnet50_l2_eps0.05.ckpt"
+download_file(dropbox_url, "./downloads/resnet50_l2_eps0.05.ckpt")
+
 # Poseresnet50 pretrained on COCO (256x192), 
 # from here https://drive.google.com/drive/folders/1hOTihvbyIxsm5ygDpbUuJ7O_tzv4oXjC 
 #           https://github.com/leoxiaobin/deep-high-resolution-net.pytorch?tab=readme-ov-file
