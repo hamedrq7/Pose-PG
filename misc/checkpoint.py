@@ -5,7 +5,7 @@ import numpy as np
 import numpy as np
 
 
-def save_results_modular(path, arrays: dict[str, np.ndarray]):
+def save_results_modular(path, arrays): # arrays : dict[str, np.ndarray]
     if os.path.isdir(path):
         path = os.path.join(path, 'results.npz')
     np.savez(path, **arrays)
