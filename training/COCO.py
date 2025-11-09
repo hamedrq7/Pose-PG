@@ -21,7 +21,7 @@ class COCO_standard_epoch_info:
         self.image_paths = []
         self.idx = 0
 
-    def __accumulate_results_for_mAP(self, preds, maxvals, joints_data):
+    def _accumulate_results_for_mAP(self, preds, maxvals, joints_data):
         """
         Store the necessary info for further AP calculation. (for calling DataSet.evaluate()) 
 
@@ -48,7 +48,7 @@ class COCO_standard_epoch_info:
         self.image_paths.extend(joints_data['imgPath'])
         self.idx += num_images
 
-    def __accumulate_running_stats(self, loss, accs, avg_acc, cnt):
+    def _accumulate_running_stats(self, loss, accs, avg_acc, cnt):
         """
         accumulate running stats, the MSE loss, and avg pck acc
         """
@@ -56,7 +56,7 @@ class COCO_standard_epoch_info:
         self.running_loss += loss.item()
 
     @staticmethod
-    def _get_pck_acc(output, target, target_weight, pck_thr=0.05):
+    def get_pck_acc(output, target, target_weight, pck_thr=0.05):
         """
         ***This is just a helper for shrinking the code volume***
         
@@ -75,7 +75,7 @@ class COCO_standard_epoch_info:
         return accs, avg_acc, cnt
     
     @staticmethod
-    def _get_predictions(output_heatmaps, joints_data, post_process="default", kernel=11, target_type="GaussianHeatmap"):
+    def get_predictions(output_heatmaps, joints_data, post_process="default", kernel=11, target_type="GaussianHeatmap"):
         """
         ***This is just a helper for shrinking the code volume***
 
@@ -227,12 +227,12 @@ class COCOTrain(Train):
             self.optim.step()
 
             # PCK acc using gt and predicted heatmaps
-            accs, avg_acc, cnt = COCO_standard_epoch_info._get_pck_acc(output, target, target_weight)
+            accs, avg_acc, cnt = COCO_standard_epoch_info.get_pck_acc(output, target, target_weight)
             # Get predictions on the original images
-            preds, maxvals = COCO_standard_epoch_info._get_predictions(output, joints_data)
+            preds, maxvals = COCO_standard_epoch_info.get_predictions(output, joints_data)
             
-            epoch_info.__accumulate_results_for_mAP(preds, maxvals, joints_data)
-            epoch_info.__accumulate_running_stats(loss, accs, avg_acc, cnt)
+            epoch_info._accumulate_results_for_mAP(preds, maxvals, joints_data)
+            epoch_info._accumulate_running_stats(loss, accs, avg_acc, cnt)
                 
             # print('train_loss', loss.item())
             # print('train_acc', avg_acc.item())
@@ -283,11 +283,11 @@ class COCOTrain(Train):
                 loss = self.loss_fn(output, target, target_weight)
 
                 # Evaluate accuracy
-                accs, avg_acc, cnt = COCO_standard_epoch_info._get_pck_acc(output, target, target_weight)
-                preds, maxvals = COCO_standard_epoch_info._get_predictions(output, joints_data)
+                accs, avg_acc, cnt = COCO_standard_epoch_info.get_pck_acc(output, target, target_weight)
+                preds, maxvals = COCO_standard_epoch_info.get_predictions(output, joints_data)
                 
-                epoch_info.__accumulate_results_for_mAP(preds, maxvals, joints_data)
-                epoch_info.__accumulate_running_stats(loss, accs, avg_acc, cnt)
+                epoch_info._accumulate_results_for_mAP(preds, maxvals, joints_data)
+                epoch_info._accumulate_running_stats(loss, accs, avg_acc, cnt)
 
                 # print('val_loss', loss.item())
                 # print('val_acc', avg_acc.item())

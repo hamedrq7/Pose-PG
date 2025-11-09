@@ -132,16 +132,16 @@ class Test(object):
 
                 # Evaluate accuracy
                 for pck_thr in self.pck_thresholds[::-1]: 
-                    accs, avg_acc, cnt = COCO_standard_epoch_info._get_pck_acc(output, target, target_weight, 
+                    accs, avg_acc, cnt = COCO_standard_epoch_info.get_pck_acc(output, target, target_weight, 
                                                                                pck_thr=pck_thr)
 
                     self.per_joint_pck_accs[pck_thr].append(accs)
                     self.pck_accs[pck_thr].append(avg_acc)
 
-                preds, maxvals = COCO_standard_epoch_info._get_predictions(output, joints_data)
+                preds, maxvals = COCO_standard_epoch_info.get_predictions(output, joints_data)
 
-                epoch_info.__accumulate_results_for_mAP(preds, maxvals, joints_data)
-                epoch_info.__accumulate_running_stats(loss, accs, avg_acc, cnt)
+                epoch_info._accumulate_results_for_mAP(preds, maxvals, joints_data)
+                epoch_info._accumulate_running_stats(loss, accs, avg_acc, cnt)
 
         self.mean_loss_test = epoch_info.running_loss / self.len_dl_test
         self.mean_acc_test = epoch_info.running_acc / self.len_dl_test
