@@ -14,6 +14,7 @@ from misc.general_utils import get_device, get_model, re_index_model_output, get
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
+from training.COCO import COCO_standard_epoch_info
 
 import numpy as np 
 
@@ -109,11 +110,9 @@ class Test(object):
         self.pck_accs = {x: [] for x in self.pck_thresholds}
 
     def _test(self):
-        num_samples = len(self.ds_test)
-        all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
-        all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
-        image_paths = []
-        idx = 0
+
+        epoch_info = COCO_standard_epoch_info(-1, 'test', len(self.ds_test), self.model_nof_joints)
+
         self.model.eval()
 
         with torch.no_grad():
@@ -126,58 +125,26 @@ class Test(object):
                 if self.flip_test_images:
                     image_flipped = flip_tensor(image, dim=-1)
                     output_flipped = self.model(image_flipped)
-
                     output_flipped = flip_back(output_flipped, self.ds_test.flip_pairs)
-
                     output = (output + output_flipped) * 0.5
 
                 loss = self.loss_fn(output, target, target_weight)
 
                 # Evaluate accuracy
                 for pck_thr in self.pck_thresholds[::-1]: 
-                    accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
-                                                            target.detach().cpu().numpy(), 
-                                                            mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
-                                                            thr=pck_thr)
+                    accs, avg_acc, cnt = COCO_standard_epoch_info._get_pck_acc(output, target, target_weight, 
+                                                                               pck_thr=pck_thr)
+
                     self.per_joint_pck_accs[pck_thr].append(accs)
                     self.pck_accs[pck_thr].append(avg_acc)
-                    
-                num_images = image.shape[0]
 
-                # measure elapsed time
-                c = joints_data['center'].numpy()
-                s = joints_data['scale'].numpy()
-                score = joints_data['score'].numpy()
-                pixel_std = 200  # ToDo Parametrize this
-                bbox_id = joints_data['bbox_id'].numpy()
+                preds, maxvals = COCO_standard_epoch_info._get_predictions(output, joints_data)
 
-                preds, maxvals = keypoints_from_heatmaps(
-                    heatmaps=output.detach().cpu().numpy(),
-                    center=c, 
-                    scale=s,
-                    post_process="default", 
-                    kernel=11, #  if self.ds_test.heatmap_sigma == 2. else 17, # carefull 
-                    target_type="GaussianHeatmap",
-                )
+                epoch_info.__accumulate_results_for_mAP(preds, maxvals, joints_data)
+                epoch_info.__accumulate_running_stats(loss, accs, avg_acc, cnt)
 
-                all_preds[idx:idx + num_images, :, 0:2] = preds[:, :, 0:2] # .detach().cpu().numpy()
-                all_preds[idx:idx + num_images, :, 2:3] = maxvals # .detach().cpu().numpy()
-                # double check this all_boxes parts
-                all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
-                all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
-                all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
-                all_boxes[idx:idx + num_images, 5] = score
-                all_boxes[idx:idx + num_images, 6] = bbox_id
-
-                image_paths.extend(joints_data['imgPath'])
-
-                idx += num_images
-
-                self.mean_loss_test += loss.item()
-                self.mean_acc_test += avg_acc.item()
-
-        self.mean_loss_test /= self.len_dl_test
-        self.mean_acc_test /= self.len_dl_test
+        self.mean_loss_test = epoch_info.running_loss / self.len_dl_test
+        self.mean_acc_test = epoch_info.running_acc / self.len_dl_test
 
         for thr in self.pck_thresholds: 
             self.per_joint_pck_accs[thr] = np.array(self.per_joint_pck_accs[thr])
@@ -192,9 +159,10 @@ class Test(object):
         print('\nTest: Loss %f - Accuracy %f' % (self.mean_loss_test, self.mean_acc_test))
         print('\nVal AP/AR')
         AP_res = self.ds_test.evaluate( 
-            all_preds[:idx], all_boxes[:idx], image_paths[:idx], res_folder=f'{self.log_path}')
+            epoch_info.all_preds[:epoch_info.idx], epoch_info.all_boxes[:epoch_info.idx], epoch_info.image_paths[:epoch_info.idx], res_folder=f'{self.log_path}')
         
         print('AP: ', AP_res)
+    
     def run(self):
         """
         Runs the test.
