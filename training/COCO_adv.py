@@ -222,9 +222,13 @@ class COCOAdv_Train(Train):
             adv_epoch_info._accumulate_running_stats(adv_loss, adv_accs, adv_avg_acc, adv_cnt)
             
             running_loss_total += loss.item()
-            # print('train_loss', loss.item())
-            # print('train_acc', avg_acc.item())
-
+            print(f'Total Loss: {loss.item()[-1]:.5f}')
+            print(f'CLN Loss: {cln_loss.item()[-1]:.5f}')
+            print(f'ADV Loss: {adv_loss.item()[-1]:.5f}')
+            print(f'CLN Acc: {cln_avg_acc.item()[-1]:.5f}')
+            print(f'Adv Acc: {adv_avg_acc.item()[-1]:.5f}')
+            print('')
+            
         self.loss_train_list.append(running_loss_total / len(self.dl_train))
         self.cln_loss_train_list.append(cln_epoch_info.running_loss / len(self.dl_train))
         self.adv_loss_train_list.append(adv_epoch_info.running_loss / len(self.dl_train))
