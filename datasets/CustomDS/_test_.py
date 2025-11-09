@@ -51,9 +51,9 @@ for batch in tqdm(train_dl):
     start = time.perf_counter()
     _ = batch  # just load, don't pass to model
     i += 1 
-    if i >= 20: break
+    if i >= 2000: break
 
-print("Avg load time:", (time.perf_counter() - start)/20)
+print("Avg load time:", (time.perf_counter() - start)/2000)
 
 # for WHAT in val_dl:
 #     print(type(WHAT))
