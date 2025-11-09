@@ -44,7 +44,7 @@ train_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person
 train_dl = DataLoader(train_ds, batch_size=16, num_workers=8)
 
 import time
-import tqdm 
+from tqdm import tqdm 
 
 for i, batch in tqdm(train_dl):
     start = time.perf_counter()
