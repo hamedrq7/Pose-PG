@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn 
 from tqdm import tqdm
+import os 
 
 from datasets.HumanPoseEstimation import HumanPoseEstimationDataset
 from misc.utils import flip_tensor, flip_back, get_final_preds
@@ -12,6 +13,7 @@ from training.COCO import COCO_standard_epoch_info
 from misc.general_utils import NormalizeByChannelMeanStd
 from misc.context import ctx_noparamgrad_and_eval 
 from misc.general_utils import perturb
+from misc.checkpoint import save_checkpoint, load_checkpoint, save_results
 
 class COCOAdv_Train(Train):
     """
@@ -176,6 +178,15 @@ class COCOAdv_Train(Train):
         self.adv_APs_train_list = []  
         self.adv_APs_val_list = [] 
 
+        ## For saving best results 
+        self.cln_best_loss = None
+        self.cln_best_acc = None
+        self.cln_best_mAP = None
+        self.adv_best_loss = None
+        self.adv_best_acc = None
+        self.adv_best_mAP = None
+
+
     def _train(self):
         running_loss_total = 0.0 
         
@@ -222,12 +233,14 @@ class COCOAdv_Train(Train):
             adv_epoch_info._accumulate_running_stats(adv_loss, adv_accs, adv_avg_acc, adv_cnt)
             
             running_loss_total += loss.item()
-            print(f'Total Loss: {loss.item():.7f}')
-            print(f'CLN Loss: {cln_loss.item():.7f}')
-            print(f'ADV Loss: {adv_loss.item():.7f}')
-            print(f'CLN Acc: {cln_avg_acc.item():.7f}')
-            print(f'Adv Acc: {adv_avg_acc.item():.7f}')
-            print('')
+            # print(f'Total Loss: {loss.item():.7f}')
+            # print(f'CLN Loss: {cln_loss.item():.7f}')
+            # print(f'ADV Loss: {adv_loss.item():.7f}')
+            # print(f'CLN Acc: {cln_avg_acc.item():.7f}')
+            # print(f'Adv Acc: {adv_avg_acc.item():.7f}')
+            # print('')
+            if step > 1:
+                break
 
         self.loss_train_list.append(running_loss_total / len(self.dl_train))
         self.cln_loss_train_list.append(cln_epoch_info.running_loss / len(self.dl_train))
@@ -330,7 +343,9 @@ class COCOAdv_Train(Train):
             running_loss_total += loss.item()
             # print('val_loss', loss.item())
             # print('val_acc', avg_acc.item())
-
+            if step > 1: 
+                break 
+            
         self.loss_val_list.append(running_loss_total / len(self.dl_val))
         self.cln_loss_val_list.append(cln_epoch_info.running_loss / len(self.dl_val))
         self.adv_loss_val_list.append(adv_epoch_info.running_loss / len(self.dl_val))
@@ -380,3 +395,51 @@ class COCOAdv_Train(Train):
             #     save_images(image, target, joints_target, output, joints_preds,
             #                 joints_data['joints_visibility'], self.summary_writer,
             #                 step=self.epoch, prefix='val_')
+
+    
+    def _checkpoint(self):
+        save_results(os.path.join(self.log_path, 'results.npz'), self.acc_train_list, self.loss_train_list, self.mAP_train_list, self.APs_train_list, self.acc_val_list, self.loss_val_list, self.mAP_val_list, self.APs_val_list)
+        
+        save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_last.pth'), epoch=self.epoch + 1, model=self.model,
+                        optimizer=self.optim, params=self.parameters)
+
+        # Best clean loss
+        if self.cln_best_loss is None or self.cln_best_loss > self.cln_loss_val_list[-1]:
+            self.cln_best_loss = self.cln_loss_val_list[-1]
+            print('cln_best_loss %f at epoch %d' % (self.cln_best_loss, self.epoch + 1))
+            save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_cln_best_loss.pth'), epoch=self.epoch + 1,
+                            model=self.model, optimizer=self.optim, params=self.parameters)
+        # Best Adv Loss
+        if self.adv_best_loss is None or self.adv_best_loss > self.adv_loss_val_list[-1]:
+            self.adv_best_loss = self.adv_loss_val_list[-1]
+            print('adv_best_loss %f at epoch %d' % (self.adv_best_loss, self.epoch + 1))
+            save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_adv_best_loss.pth'), epoch=self.epoch + 1,
+                            model=self.model, optimizer=self.optim, params=self.parameters)
+         
+        # Best clean acc
+        if self.cln_best_acc is None or self.cln_best_acc < self.cln_acc_val_list[-1]:
+            self.cln_best_acc = self.cln_acc_val_list[-1]
+            print('cln_best_acc %f at epoch %d' % (self.cln_best_acc, self.epoch + 1))
+            save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_cln_best_acc.pth'), epoch=self.epoch + 1,
+                            model=self.model, optimizer=self.optim, params=self.parameters)
+        
+        # Best Adv acc
+        if self.adv_best_acc is None or self.adv_best_acc < self.adv_acc_val_list[-1]:
+            self.adv_best_acc = self.adv_acc_val_list[-1]
+            print('adv_best_acc %f at epoch %d' % (self.adv_best_acc, self.epoch + 1))
+            save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_adv_best_acc.pth'), epoch=self.epoch + 1,
+                            model=self.model, optimizer=self.optim, params=self.parameters)
+        
+        # Best clean mAP
+        if self.cln_best_mAP is None or self.cln_best_mAP < self.cln_mAP_val_list[-1]:
+            self.cln_best_mAP = self.cln_mAP_val_list[-1]
+            print('cln_best_mAP %f at epoch %d' % (self.cln_best_mAP, self.epoch + 1))
+            save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_cln_best_mAP.pth'), epoch=self.epoch + 1,
+                            model=self.model, optimizer=self.optim, params=self.parameters)
+
+        # Best clean mAP
+        if self.adv_best_mAP is None or self.adv_best_mAP < self.adv_mAP_val_list[-1]:
+            self.adv_best_mAP = self.adv_mAP_val_list[-1]
+            print('adv_best_mAP %f at epoch %d' % (self.adv_best_mAP, self.epoch + 1))
+            save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_adv_best_mAP.pth'), epoch=self.epoch + 1,
+                            model=self.model, optimizer=self.optim, params=self.parameters)
