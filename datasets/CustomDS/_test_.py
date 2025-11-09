@@ -31,22 +31,31 @@ from COCODataset import TopDownCocoDataset
 train_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
                         data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
 
-test_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_test_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
+# test_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
+#                         data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_test_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
 
-val_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
+# val_ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
+#                         data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
 
-val_dl = DataLoader(val_ds, batch_size=2)
+train_dl = DataLoader(train_ds, batch_size=16, num_workers=8)
 
-for WHAT in val_dl:
-    print(type(WHAT))
-    print(WHAT.keys())
+import time
 
-    print(WHAT['img'].shape)
-    print(WHAT['target'].shape)
-    print(WHAT['target_weight'].shape)
+for i, batch in enumerate(train_dl):
+    start = time.perf_counter()
+    _ = batch  # just load, don't pass to model
+    if i >= 20: break
+
+print("Avg load time:", (time.perf_counter() - start)/20)
+
+# for WHAT in val_dl:
+#     print(type(WHAT))
+#     print(WHAT.keys())
+
+#     print(WHAT['img'].shape)
+#     print(WHAT['target'].shape)
+#     print(WHAT['target_weight'].shape)
     
-    print((WHAT['img_metas']['bbox_score']).shape)
+#     print((WHAT['img_metas']['bbox_score']).shape)
     
-    break
+#     break

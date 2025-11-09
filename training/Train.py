@@ -191,6 +191,7 @@ class Train(object):
         # load train and val datasets
         self.dl_train = DataLoader(self.ds_train, batch_size=self.batch_size, shuffle=True,
                                    num_workers=self.num_workers, drop_last=False)
+        
         self.len_dl_train = len(self.dl_train)
 
         self.dl_val = DataLoader(self.ds_val, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers)
