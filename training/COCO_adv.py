@@ -401,7 +401,7 @@ class COCOAdv_Train(Train):
     def _checkpoint(self):
         # save_results(os.path.join(self.log_path, 'results.npz'), self.acc_train_list, self.loss_train_list, self.mAP_train_list, self.APs_train_list, self.acc_val_list, self.loss_val_list, self.mAP_val_list, self.APs_val_list)
         save_results_modular(
-            os.path.join(self.log_path, 'results.npz')
+            os.path.join(self.log_path, 'results.npz'),
             {
                 'cln_loss_train_list': self.cln_loss_train_list,
                 'cln_loss_val_list': self.cln_loss_val_list,
