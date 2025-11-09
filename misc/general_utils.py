@@ -7,6 +7,35 @@ from models_.hrnet import HRNet
 from misc.checkpoint import load_checkpoint
 from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 
+from torch.autograd import Variable
+import torch.optim as optim
+
+
+def perturb(model, device, X, y, y_t, loss_fn, epsilon, num_steps, step_size, rand_init=False):
+    X, y, y_t = Variable(X, requires_grad=True), Variable(y), Variable(y_t)
+    X_pgd = Variable(X.data, requires_grad=True)
+    
+    if rand_init:
+        random_noise = torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
+        X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
+
+    
+    for k in range(num_steps):
+        opt = optim.SGD([X_pgd], lr=1e-3)
+        opt.zero_grad()
+
+        with torch.enable_grad():
+            adv_output = model(X_pgd)   
+            adv_loss = loss_fn(adv_output, y, y_t)
+
+        adv_loss.backward()
+        eta = step_size * X_pgd.grad.data.sign()
+        X_pgd = Variable(X_pgd.data + eta, requires_grad=True)
+        eta = torch.clamp(X_pgd.data - X.data, -epsilon, epsilon)
+        X_pgd = Variable(X.data + eta, requires_grad=True)
+        X_pgd = Variable(torch.clamp(X_pgd, 0, 1.0), requires_grad=True)
+
+    return X_pgd
 
 class NormalizeByChannelMeanStd(nn.Module):
     def __init__(self, mean, std):
@@ -60,6 +89,7 @@ def re_index_model_output(model, index_map):
     index_map = [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]
     reordered_output = output[:, index_map, :, :]
     """
+    print('Re indexing output channels of model, only use for NAIVE zero shot testing from COCO to AP10K')
     return ReIndexWrapper(model, index_map)
 
 def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, pretrained_weight_path=None): 

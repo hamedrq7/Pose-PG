@@ -11,40 +11,13 @@ from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 from misc.checkpoint import load_checkpoint
 from misc.utils import flip_tensor, flip_back, get_final_preds
 from misc.visualization import save_images
-from misc.general_utils import NormalizeByChannelMeanStd, get_device, get_model, re_index_model_output, get_loss_fn
+from misc.general_utils import NormalizeByChannelMeanStd, get_device, get_model, re_index_model_output, get_loss_fn, perturb
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
 
 import numpy as np 
-from torch.autograd import Variable
-import torch.optim as optim
 
-def perturb(model, device, X, y, y_t, loss_fn, epsilon, num_steps, step_size, rand_init=False):
-    X, y, y_t = Variable(X, requires_grad=True), Variable(y), Variable(y_t)
-    X_pgd = Variable(X.data, requires_grad=True)
-    
-    if rand_init:
-        random_noise = torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
-        X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
-
-    
-    for k in range(num_steps):
-        opt = optim.SGD([X_pgd], lr=1e-3)
-        opt.zero_grad()
-
-        with torch.enable_grad():
-            adv_output = model(X_pgd)   
-            adv_loss = loss_fn(adv_output, y, y_t)
-
-        adv_loss.backward()
-        eta = step_size * X_pgd.grad.data.sign()
-        X_pgd = Variable(X_pgd.data + eta, requires_grad=True)
-        eta = torch.clamp(X_pgd.data - X.data, -epsilon, epsilon)
-        X_pgd = Variable(X.data + eta, requires_grad=True)
-        X_pgd = Variable(torch.clamp(X_pgd, 0, 1.0), requires_grad=True)
-
-    return X_pgd
 
 class TestRobust(object):
     """
