@@ -46,9 +46,11 @@ train_dl = DataLoader(train_ds, batch_size=16, num_workers=8)
 import time
 from tqdm import tqdm 
 
-for i, (batch) in tqdm(train_dl):
+i = 0
+for batch in tqdm(train_dl):
     start = time.perf_counter()
     _ = batch  # just load, don't pass to model
+    i += 1 
     if i >= 20: break
 
 print("Avg load time:", (time.perf_counter() - start)/20)
