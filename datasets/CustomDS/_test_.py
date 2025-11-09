@@ -46,7 +46,7 @@ train_dl = DataLoader(train_ds, batch_size=16, num_workers=8)
 import time
 from tqdm import tqdm 
 
-for i, batch in tqdm(train_dl):
+for i, (batch) in tqdm(train_dl):
     start = time.perf_counter()
     _ = batch  # just load, don't pass to model
     if i >= 20: break
