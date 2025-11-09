@@ -239,8 +239,6 @@ class COCOAdv_Train(Train):
             # print(f'CLN Acc: {cln_avg_acc.item():.7f}')
             # print(f'Adv Acc: {adv_avg_acc.item():.7f}')
             # print('')
-            if step > 2: 
-                break
 
 
         self.loss_train_list.append(running_loss_total / len(self.dl_train))
@@ -344,8 +342,6 @@ class COCOAdv_Train(Train):
             running_loss_total += loss.item()
             # print('val_loss', loss.item())
             # print('val_acc', avg_acc.item())
-            if step > 2: 
-                break
 
         self.loss_val_list.append(running_loss_total / len(self.dl_val))
         self.cln_loss_val_list.append(cln_epoch_info.running_loss / len(self.dl_val))
