@@ -163,18 +163,18 @@ class COCOAdv_Train(Train):
         self.cln_acc_train_list = [] 
         self.cln_acc_val_list = [] 
         self.cln_mAP_train_list = [] 
-        self.cln_mAP_val_list = [] # 
-        self.cln_APs_train_list = [] 
-        self.cln_APs_val_list = [] # 
+        self.cln_mAP_val_list = []
+        self.cln_APs_train_list = []
+        self.cln_APs_val_list = []
 
         self.adv_loss_train_list = [] 
         self.adv_loss_val_list = [] 
         self.adv_acc_train_list = [] 
         self.adv_acc_val_list = [] 
         self.adv_mAP_train_list = []  
-        self.adv_mAP_val_list = [] # 
+        self.adv_mAP_val_list = [] 
         self.adv_APs_train_list = []  
-        self.adv_APs_val_list = [] # 
+        self.adv_APs_val_list = [] 
 
     def _train(self):
         running_loss_total = 0.0 
