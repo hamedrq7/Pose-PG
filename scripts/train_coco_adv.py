@@ -185,9 +185,9 @@ if __name__ == '__main__':
     # Adv Parameters
     parser.add_argument("--mix_st", help="mix standard input with adv during training", action="store_true")
     parser.add_argument("--attack_type", help="Attacked used for trainig and eval", type=str, default='pgd')
-    parser.add_argument("--epsilon", "-l", help="max epsilon of perturbations during training", type=float, default=8/255.)
+    parser.add_argument("--epsilon", help="max epsilon of perturbations during training", type=float, default=8/255.)
     parser.add_argument("--num_steps", help="num_steps for the iterative attacked", type=int, default=10)
-    parser.add_argument("--step_size", "-l", help="steps size of the iterative attacker", type=float, default=2/255.)
+    parser.add_argument("--step_size", help="steps size of the iterative attacker", type=float, default=2/255.)
     parser.add_argument("--disable_rand_init", help="disables random noise in adv generation during training", action="store_true")
 
     args = parser.parse_args()
