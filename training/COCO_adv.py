@@ -13,7 +13,7 @@ from training.COCO import COCO_standard_epoch_info
 from misc.general_utils import NormalizeByChannelMeanStd
 from misc.context import ctx_noparamgrad_and_eval 
 from misc.general_utils import perturb
-from misc.checkpoint import save_checkpoint, load_checkpoint, save_results
+from misc.checkpoint import save_checkpoint, load_checkpoint, save_results_modular
 
 class COCOAdv_Train(Train):
     """
@@ -239,8 +239,9 @@ class COCOAdv_Train(Train):
             # print(f'CLN Acc: {cln_avg_acc.item():.7f}')
             # print(f'Adv Acc: {adv_avg_acc.item():.7f}')
             # print('')
-            if step > 1:
+            if step > 2: 
                 break
+
 
         self.loss_train_list.append(running_loss_total / len(self.dl_train))
         self.cln_loss_train_list.append(cln_epoch_info.running_loss / len(self.dl_train))
@@ -267,8 +268,8 @@ class COCOAdv_Train(Train):
 
         
         print(f'Ep{self.epoch} - Clean Train Acc: {self.cln_acc_train_list[-1]:.3f} | Loss: {self.cln_loss_train_list[-1]:.5f} | AP: {self.cln_mAP_train_list[-1]:.3f}')
-        print(f'                 Adv   Train Acc: {self.adv_acc_train_list[-1]:.3f} | Loss: {self.adv_loss_train_list[-1]:.5f} | AP: {self.adv_mAP_train_list[-1]:.3f}')
-        print(f'                 Total Loss: {self.loss_train_list[-1]:.3f}')
+        print(f'Ep{self.epoch}   Adv   Train Acc: {self.adv_acc_train_list[-1]:.3f} | Loss: {self.adv_loss_train_list[-1]:.5f} | AP: {self.adv_mAP_train_list[-1]:.3f}')
+        print(f'Ep{self.epoch}   Total Loss: {self.loss_train_list[-1]:.3f}')
         
         if self.use_tensorboard:
             self.summary_writer.add_scalar('train_loss', self.cln_loss_train_list[-1],
@@ -343,9 +344,9 @@ class COCOAdv_Train(Train):
             running_loss_total += loss.item()
             # print('val_loss', loss.item())
             # print('val_acc', avg_acc.item())
-            if step > 1: 
-                break 
-            
+            if step > 2: 
+                break
+
         self.loss_val_list.append(running_loss_total / len(self.dl_val))
         self.cln_loss_val_list.append(cln_epoch_info.running_loss / len(self.dl_val))
         self.adv_loss_val_list.append(adv_epoch_info.running_loss / len(self.dl_val))
@@ -370,8 +371,8 @@ class COCOAdv_Train(Train):
         self.adv_APs_val_list.append(adv_all_APs)
 
         print(f'Ep{self.epoch} - Clean Val Acc: {self.cln_acc_val_list[-1]:.3f} | Loss: {self.cln_loss_val_list[-1]:.5f} | AP: {self.cln_mAP_val_list[-1]:.3f}')
-        print(f'                 Adv   Val Acc: {self.adv_acc_val_list[-1]:.3f} | Loss: {self.adv_loss_val_list[-1]:.5f} | AP: {self.adv_mAP_val_list[-1]:.3f}')
-        print(f'                 Total Loss: {self.loss_val_list[-1]:.3f}')
+        print(f'Ep{self.epoch}   Adv   Val Acc: {self.adv_acc_val_list[-1]:.3f} | Loss: {self.adv_loss_val_list[-1]:.5f} | AP: {self.adv_mAP_val_list[-1]:.3f}')
+        print(f'Ep{self.epoch}   Total Loss: {self.loss_val_list[-1]:.3f}')
 
         if self.use_tensorboard:
             self.summary_writer.add_scalar('val_loss', self.cln_loss_val_list[-1],
@@ -398,8 +399,29 @@ class COCOAdv_Train(Train):
 
     
     def _checkpoint(self):
-        save_results(os.path.join(self.log_path, 'results.npz'), self.acc_train_list, self.loss_train_list, self.mAP_train_list, self.APs_train_list, self.acc_val_list, self.loss_val_list, self.mAP_val_list, self.APs_val_list)
-        
+        # save_results(os.path.join(self.log_path, 'results.npz'), self.acc_train_list, self.loss_train_list, self.mAP_train_list, self.APs_train_list, self.acc_val_list, self.loss_val_list, self.mAP_val_list, self.APs_val_list)
+        save_results_modular(
+            os.path.join(self.log_path, 'results.npz')
+            {
+                'cln_loss_train_list': self.cln_loss_train_list,
+                'cln_loss_val_list': self.cln_loss_val_list,
+                'cln_acc_train_list': self.cln_acc_train_list,
+                'cln_acc_val_list': self.cln_acc_val_list,
+                'cln_mAP_train_list': self.cln_mAP_train_list,
+                'cln_mAP_val_list': self.cln_mAP_val_list,
+                'cln_APs_train_list': self.cln_APs_train_list,
+                'cln_APs_val_list': self.cln_APs_val_list,
+                'adv_loss_train_list': self.adv_loss_train_list,
+                'adv_loss_val_list': self.adv_loss_val_list,
+                'adv_acc_train_list': self.adv_acc_train_list,
+                'adv_acc_val_list': self.adv_acc_val_list,
+                'adv_mAP_train_list': self.adv_mAP_train_list,
+                'adv_mAP_val_list': self.adv_mAP_val_list,
+                'adv_APs_train_list': self.adv_APs_train_list,
+                'adv_APs_val_list': self.adv_APs_val_list,
+            }
+        )
+
         save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_last.pth'), epoch=self.epoch + 1, model=self.model,
                         optimizer=self.optim, params=self.parameters)
 

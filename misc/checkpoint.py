@@ -2,6 +2,15 @@ import os
 import torch
 import numpy as np 
 
+import numpy as np
+
+
+def save_results_modular(path, arrays: dict[str, np.ndarray]):
+    if os.path.isdir(path):
+        path = os.path.join(path, 'results.npz')
+    np.savez(path, **arrays)
+
+
 def save_results(path, acc_train_list, loss_train_list, mAP_train_list, APs_train_list, acc_val_list, loss_val_list, mAP_val_list, APs_val_list):
     if os.path.isdir(path):
         path = os.path.join(path, 'results.npz')

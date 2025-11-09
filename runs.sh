@@ -14,5 +14,5 @@
 
 # Testing Adversarial Training 
 # Testing params
-python scripts/train_coco_adv.py --epochs 1 --disable_rand_init --mix_st --epsilon 0.01568 --step_size 0.01568  --num_steps 1 --batch_size 16 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/AdvTraining_FGSM_MIX_eps4' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50_linf4.pt'
+python scripts/train_coco_adv.py --disable_rand_init --mix_st --epsilon 0.01568 --step_size 0.01568  --num_steps 1 --batch_size 16 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/AdvTraining_FGSM_MIX_eps4' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50_linf4.pt'
 
