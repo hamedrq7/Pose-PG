@@ -25,11 +25,42 @@ from torch.utils.data import DataLoader
 from misc.visualization import joints_dict
 import matplotlib.pyplot as plt 
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
-from misc.general_utils import NormalizeByChannelMeanStd
- 
+from misc.general_utils import NormalizeByChannelMeanStd, set_seed_reproducability, get_device, perturb
+from misc.log_utils import make_dir
+import cv2 
+
 mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
 std  = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
 
+
+def get_joints(out, X, nof=17, res = (256, 192)): 
+    boxes = np.asarray([0, 0, X.shape[2], X.shape[1]], dtype=float)
+    # [x1, y1, x2, y2] 
+    # print(boxes)
+    
+    # print(boxes.shape) # [4]
+    
+    pts = np.empty((out.shape[0], 3), dtype=np.float32)
+    # [17, 3]
+    # print(pts.shape)
+
+    for j, joint in enumerate(out):
+        pt = np.unravel_index(np.argmax(joint), (res[0] // 4, res[1] // 4))
+        # print(pt) # (x, y)
+        # print(joint.shape) # [target_h, target_w] 
+        # 0: pt_y / (height // 4) * (bb_y2 - bb_y1) + bb_y1
+        # 1: pt_x / (width // 4) * (bb_x2 - bb_x1) + bb_x1
+        # 2: confidences
+        pts[j, 0] = pt[0] * 1. / (res[0] // 4) * (boxes[3] - boxes[1]) + boxes[1]
+        pts[j, 1] = pt[1] * 1. / (res[1] // 4) * (boxes[2] - boxes[0]) + boxes[0]
+        pts[j, 2] = joint[pt]
+        # print(boxes)
+        # print(pt)
+        # print(pts[j, 0])
+        # print(pts[j, 1])
+        # print(pts[j, 2])
+
+    return pts 
 
 def plot_joints(out, X, name, res, nof):
     
@@ -167,15 +198,20 @@ def get_and_report(model, ds, loss_fn, X, y, y_targeted, joints_data, num_sample
     all_boxes[:, 6] = bbox_id
     image_paths.extend(joints_data['imgPath'])
 
-    all_APs, mAP = ds.evaluate(
-        all_preds[:num_samples], all_boxes[:num_samples], image_paths[:num_samples], res_folder='./')
-    # all_APs, mAP = self.ds_train.evaluate_overall_accuracy(
-    #     all_preds[:idx], all_boxes[:idx], image_paths[:idx], output_dir=self.log_path)
-    
-    print(f'Acc: {avg_acc.item():.3f} | Loss: {loss.item():.5f} | AP: {mAP:.3f}')
+    # all_APs, mAP = ds.evaluate(
+    #     all_preds[:num_samples], all_boxes[:num_samples], image_paths[:num_samples], res_folder='./')
+    mAP = -1 
 
+    return {
+        'pck_acc': avg_acc.item(),
+        'loss': loss.item(),
+        'mAP': mAP,
+        'preds': preds, 
+        'maxvals': maxvals,
+        'heatmaps': output.detach().cpu().numpy()
+    }
     ### Visualization
-    
+
     plot_joints(output[0].detach().cpu().numpy()[None, :, :, :], X[0].detach().cpu().numpy()[None, :, :, :], f'{name}_1', (256, 192), model_nof_joints)
     # plot_joints(output[1].detach().cpu().numpy()[None, :, :, :], X[1].detach().cpu().numpy()[None, :, :, :], f'{name}_2', (256, 192), model_nof_joints)
 
@@ -233,52 +269,29 @@ def _show_images(img, advimg, enhance=127):
     plt.clf()
 
 def main(
-         batch_size=1,
-         num_workers=4,
          pretrained_weight_path=None,
-         checkpoint_path=None,
-         log_path='./logs',
-         disable_tensorboard_log=False,
          model_c=48,
          model_nof_joints=17,
          model_bn_momentum=0.1,
-         disable_flip_test_images=False,
          image_resolution='(384, 288)',
-         coco_root_path="./datasets/COCO",
-         coco_bbox_path=None,
          seed=1,
          device=None,
-         pre_trained_only=True,
-         model_name = 'hrnet'
+         model_name = 'hrnet',
+         log_path='temp'
          ):
 
     # Seeds
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.enabled = True  # Enables cudnn
-        torch.backends.cudnn.benchmark = True  # It should improve runtime performances when batch shape is fixed. See https://discuss.pytorch.org/t/what-does-torch-backends-cudnn-benchmark-do/5936
-        torch.backends.cudnn.deterministic = True  # To have ~deterministic results
+    set_seed_reproducability(seed)
 
     # torch device
-    if device is not None:
-        device = torch.device(device)
-    else:
-        if torch.cuda.is_available():
-            device = torch.device('cuda:0')
-        else:
-            device = torch.device('cpu')
-
-    print(device)
+    device = get_device(device)
 
     image_resolution = ast.literal_eval(image_resolution)
 
     # pop out normalization pipeline val
     data_pipeline = COCO_configs.COCO_val_pipeline
     _ = data_pipeline.pop(3)
-    print(data_pipeline)
+
     # use diff joint weights to customize adv loss
     ds_info = COCO_configs.COCO_dataset_info
     ds_info['joint_weights'] = [
@@ -304,16 +317,21 @@ def main(
     #     0., # left_ankle
     #     0., # right_ankle
     # ]
+
     ds_cfg = COCO_configs.COCO_data_cfg
     ds_cfg['use_different_joint_weights'] = True
-    ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=ds_cfg, pipeline=data_pipeline, dataset_info=ds_info, test_mode=False) # test_mode ? [?]
+    # ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
+    #                     data_cfg=ds_cfg, pipeline=data_pipeline, dataset_info=ds_info, test_mode=False,
+    #                     indicies=None) # test_mode ? [?]
     
     # train but with val pipeline
-    # ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
-    #                     data_cfg=COCO_configs.COCO_data_cfg, pipeline=data_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
+    ds = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
+        data_cfg=ds_cfg, pipeline=data_pipeline, dataset_info=ds_info, test_mode=False,
+        indicies = [761, 4377, 4554, 4711, 7277, 9797, 10082, 11292, 11655, 11826]
+    )
 
-    dl = DataLoader(ds, batch_size=batch_size)
+    batch_size = 100
+    dl = DataLoader(ds, batch_size=batch_size, num_workers=2)
 
     # Load model
     model = load_model(model_name, model_c, model_nof_joints, model_bn_momentum, pretrained_weight_path, device)
@@ -328,65 +346,140 @@ def main(
     # Load one batch
     data_iter = iter(dl)
     image, target, target_weight, joints_data = next(data_iter)
+    print(joints_data.keys())
     image = image.to(device)
     target = target.to(device)
     target_weight = target_weight.to(device)
     
     ########################################### CLEAN
     X, y, y_t = Variable(image, requires_grad=True), Variable(target), Variable(target_weight)
-    get_and_report(model, ds, loss_fn, X, y, y_t, joints_data, batch_size, model_nof_joints, name='clean')
 
-    ################################ Adversarial
     EPSILON = 8/255.
-    NUM_STEPS = 20
-    STEP_SIZE = 1/255. 
+    NUM_STEPS = 10
+    STEP_SIZE = 2/255. 
+    X_pgd = perturb(model, device, X, target, target_weight, loss_fn, EPSILON, NUM_STEPS, STEP_SIZE, rand_init=False)
 
-    X_pgd = Variable(X.data, requires_grad=True)
-    if False:
-        random_noise = torch.FloatTensor(*X_pgd.shape).uniform_(-EPSILON, EPSILON).to(device)
-        X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
+    results_cln = get_and_report(model, ds, loss_fn, X, y, y_t, joints_data, X.shape[0], model_nof_joints, name='clean')
+    results_adv = get_and_report(model, ds, loss_fn, X_pgd, y, y_t, joints_data, X_pgd.shape[0], model_nof_joints, name='adv')
 
-    for k in range(NUM_STEPS):
-        opt = optim.SGD([X_pgd], lr=1e-3)
-        opt.zero_grad()
+    X = X.detach().cpu().numpy()
+    X_pgd = X_pgd.detach().cpu().numpy()
 
-        with torch.enable_grad():
-            # loss = nn.CrossEntropyLoss()(model(X_pgd), y)
-            adv_output = model(X_pgd)
-   
-            adv_loss = loss_fn(adv_output, y, y_t)
+    print('Plotting results')
+    for idx in range(X.shape[0]): 
+        # Directory_name = img_id followed by bbox_id
+        sample_name = f'{joints_data['imgId'][idx].numpy()}_{joints_data['bbox_id'][idx].numpy()}'
+        make_dir(f'{log_path}/{sample_name}')
 
-        adv_loss.backward()
-        eta = STEP_SIZE * X_pgd.grad.data.sign()
-        X_pgd = Variable(X_pgd.data + eta, requires_grad=True)
-        eta = torch.clamp(X_pgd.data - X.data, -EPSILON, EPSILON)
-        X_pgd = Variable(X.data + eta, requires_grad=True)
-        X_pgd = Variable(torch.clamp(X_pgd, 0, 1.0), requires_grad=True)
+        fig = plt.figure(figsize=(240, 60)) # figsize=(90/2.54, 30/2.54)
+        
+        # x
+        ax = fig.add_subplot(241)
+        ax.imshow(X[idx].transpose(1, 2, 0))
+        ax.set_title('Clean')
+        ax.axis("off")
 
-    get_and_report(model, ds, loss_fn, X_pgd, y, y_t, joints_data, batch_size, model_nof_joints, name='adv')
-    
-    _show_images(X, X_pgd, enhance=50)
+        # joints
+        ax = fig.add_subplot(242)
+        ax.imshow(np.ones_like(X[idx]).transpose(1, 2, 0))
+        cln_joints = get_joints(results_cln['heatmaps'][idx], X[idx])
+        # print(cln_joints)
+        # print(results_cln['preds'])
+        bones = joints_dict()["coco"]["skeleton"]
+        for bone in bones:
+            xS = [cln_joints[bone[0],1], cln_joints[bone[1],1]]
+            yS = [cln_joints[bone[0],0], cln_joints[bone[1],0]]
+            ax.plot(xS, yS, linewidth=3, c=(0,0.3,0.7))
+        ax.scatter(cln_joints[:,1],cln_joints[:,0], s=20, c='r')
+        ax.set_title('Predicted Joints (cln)')
+        ax.axis("off")
 
+        # x+heatmap
+        ax = fig.add_subplot(243)
+        heatmap_up = cv2.resize(
+            results_cln['heatmaps'][idx].sum(0),
+            (192, 256),
+            interpolation=cv2.INTER_LINEAR   # smooth upsampling
+        )
+        heatmap_up = (heatmap_up - heatmap_up.min()) / (heatmap_up.max() - heatmap_up.min())
+        overlay_intensity = 0.5  # 0–1
+        ax.imshow(X[idx].transpose(1, 2, 0))
+        ax.imshow(
+            heatmap_up,
+            cmap="jet",
+            alpha=overlay_intensity
+        )
+        ax.set_title('Heatmaps (cln)')
+        ax.axis("off")
+
+        # perturbations
+        ax = fig.add_subplot(244)
+        pert = X_pgd[idx] - X[idx]
+        ax.imshow(pert.transpose(1, 2, 0)* 50)
+        ax.set_title('Perturbations (enhanced)')
+        ax.axis("off")
+
+        # x adv
+        ax = fig.add_subplot(245)
+        ax.imshow(X_pgd[idx].transpose(1, 2, 0))
+        ax.set_title('Adv. Sample')
+        ax.axis("off")
+
+        # joints adv
+        ax = fig.add_subplot(246)
+        ax.imshow(np.ones_like(X_pgd[idx]).transpose(1, 2, 0))
+        adv_joints = get_joints(results_adv['heatmaps'][idx], X_pgd[idx])
+        # print(adv_joints)
+        # print(results_adv['preds'])
+        bones = joints_dict()["coco"]["skeleton"]
+        for bone in bones:
+            xS = [adv_joints[bone[0],1], adv_joints[bone[1],1]]
+            yS = [adv_joints[bone[0],0], adv_joints[bone[1],0]]
+            ax.plot(xS, yS, linewidth=3, c=(0,0.3,0.7))
+        ax.scatter(adv_joints[:,1], adv_joints[:,0], s=20, c='r')
+        ax.set_title('Predicted Joints (adv)')
+        ax.axis("off")
+
+        # x adv +heatmap
+        ax = fig.add_subplot(247)
+        heatmap_up = cv2.resize(
+            results_adv['heatmaps'][idx].sum(0),
+            (192, 256),
+            interpolation=cv2.INTER_LINEAR   # smooth upsampling
+        )
+        heatmap_up = (heatmap_up - heatmap_up.min()) / (heatmap_up.max() - heatmap_up.min())
+        overlay_intensity = 0.5  # 0–1
+        ax.imshow(X_pgd[idx].transpose(1, 2, 0))
+        ax.imshow(
+            heatmap_up,
+            cmap="jet",
+            alpha=overlay_intensity
+        )
+        ax.set_title('Heatmaps (adv)')
+        ax.axis("off")
+
+        # heatmap diff
+        ax = fig.add_subplot(248)
+        diff = results_adv['heatmaps'][idx] - results_cln['heatmaps'][idx]
+        ax.imshow(diff.sum(0))
+        ax.set_title('HM_adv-HM_cln')
+        ax.axis("off")
+
+        plt.savefig(f'{log_path}/{sample_name}/all.png')
+        plt.clf( )
+        
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--pretrained_weight_path", "-p",
                         help="pre-trained weight path. Weights will be loaded before training starts.",
-                        type=str, default=None)
-    parser.add_argument("--checkpoint_path", "-c",
-                        help="previous checkpoint path. Checkpoint will be loaded before training starts. It includes "
-                             "the model, the optimizer, the epoch, and other parameters.",
                         type=str, default=None)
     parser.add_argument("--log_path", help="log path. tensorboard logs and checkpoints will be saved here.",
                         type=str, default='./')
     parser.add_argument("--model_c", help="HRNet c parameter", type=int, default=50)
     parser.add_argument("--model_nof_joints", help="HRNet nof_joints parameter", type=int, default=17)
     parser.add_argument("--model_bn_momentum", help="HRNet bn_momentum parameter", type=float, default=0.1)
-    parser.add_argument("--disable_flip_test_images", help="disable image flip during evaluation", action="store_true")
     parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
-    parser.add_argument("--coco_root_path", help="COCO dataset root path", type=str, default="./datasets/COCO")
-    parser.add_argument("--coco_bbox_path", help="path of detected bboxes to use during evaluation",
-                        type=str, default=None)
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='poseresnet')

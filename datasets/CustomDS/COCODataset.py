@@ -59,7 +59,8 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
                  data_cfg,
                  pipeline,
                  dataset_info=None,
-                 test_mode=False):
+                 test_mode=False,
+                 indicies=None):
 
         super().__init__(
             ann_file,
@@ -79,13 +80,14 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
         self.oks_thr = data_cfg['oks_thr']
         self.vis_thr = data_cfg['vis_thr']
 
+        self.indicies = indicies
         self.db = self._get_db()
 
         print(f'=> num_images: {self.num_images}')
         print(f'=> load {len(self.db)} samples')
         print('skipped in get.db()', self.skipped)
 
-    def _get_db(self):
+    def _get_db(self,):
         """Load dataset."""
         if (not self.test_mode) or self.use_gt_bbox:
             # use ground truth bbox
@@ -99,7 +101,12 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
         """Ground truth bbox and keypoints."""
         gt_db = []
         for img_id in self.img_ids:
-            gt_db.extend(self._load_coco_keypoint_annotation_kernel(img_id))
+            if self.indicies is None: 
+                gt_db.extend(self._load_coco_keypoint_annotation_kernel(img_id))
+            else:
+                # only load given image ids
+                if img_id in self.indicies: 
+                    gt_db.extend(self._load_coco_keypoint_annotation_kernel(img_id))
         return gt_db
 
     def _load_coco_keypoint_annotation_kernel(self, img_id):
@@ -113,14 +120,30 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
             dict: db entry
         """
         img_ann = self.coco.loadImgs(img_id)[0]
+        """
+        an example of img_ann: {'license': 4, 'file_name': '000000397133.jpg', 'coco_url': 'http://images.cocodataset.org/val2017/000000397133.jpg', 'height': 427, 'width': 640, 'date_captured': '2013-11-14 17:02:52', 'flickr_url': 'http://farm7.staticflickr.com/6116/6255196340_da26cf2c9e_z.jpg', 'id': 397133}
+        """
         width = img_ann['width']
         height = img_ann['height']
         num_joints = self.ann_info['num_joints']
 
-        ann_ids = self.coco.getAnnIds(imgIds=img_id, iscrowd=False)
+        ann_ids = self.coco.getAnnIds(imgIds=img_id, iscrowd=False) # 
+        """
+        Each image has some annotations, this might be for an object not a human, 
+        but this will return index for each annotation of the given image
+        """
+
         objs = self.coco.loadAnns(ann_ids)
+        """
+        This loads the annotation dictionary for each object (each annotation), 
+        This object might have keypoints and might not have it
+        """
+        
 
         # sanitize bboxes
+        """
+        This will keep valid objects only
+        """
         valid_objs = []
         for obj in objs:
             if 'bbox' not in obj:
@@ -135,6 +158,14 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
                 valid_objs.append(obj)
         objs = valid_objs
 
+        """
+        This is the most imporant part,
+        it checks if the object is Human (rather has keypoints),
+        if it has any keypoints, then itll calculate center, scale and everything
+        and uses ground truth bounding box to determine center and scale,
+        Down the road this center and scale will be used to crop the input image so
+        the object is centered. 
+        """
         bbox_id = 0
         rec = []
         skipped = 0
