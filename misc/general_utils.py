@@ -179,7 +179,8 @@ def load_pretrained(model, pretrained_weight_path, device):
         print('Pre-trained weights unexpected keys:', unexpected_keys)
     else:
         print('All pretrained weights keys matched')
-        
+    
+    exit()
     return model 
 
 def set_seed_reproducability(seed): 
