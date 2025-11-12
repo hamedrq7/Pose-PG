@@ -13,7 +13,7 @@ develop-eggs/
 dist/
 downloads/
 datasets/COCO
-datasets/coco-c
+datasets/coco-C
 datasets/ap-10k
 no_log_path_given/
 temp/
