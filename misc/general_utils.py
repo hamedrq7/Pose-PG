@@ -155,10 +155,12 @@ def load_pretrained(model, pretrained_weight_path, device):
         if '0.mean' in checkpoint['model'].keys() and '0.std' in checkpoint['model'].keys():
             new_state_dict = {}
             for k, v in checkpoint['model'].items():
-                if "1." in k: 
-                    new_key = k.replace("1.", "")
-                    new_state_dict[new_key] = v
-                    # print(k, new_key)
+                if k.startswith("1."):
+                    new_key = k[2:]  # remove the first two characters ("1.")
+                else:
+                    new_key = k
+                new_state_dict[new_key] = v
+                # print(k, new_key)
         else:
             # normal training
             new_state_dict = checkpoint['model']
