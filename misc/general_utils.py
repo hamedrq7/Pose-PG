@@ -146,6 +146,7 @@ def load_pretrained(model, pretrained_weight_path, device):
                 print('error in loading model weights (name matchin issue)')
                 return None
             new_state_dict[new_key] = v
+            
     ### For chackpoints saved using your own code: 
     elif 'epoch' in checkpoint.keys() and 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'params' in checkpoint.keys(): 
         print('Model is trained using our own code')
