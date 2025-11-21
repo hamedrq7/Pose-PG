@@ -75,7 +75,7 @@ class COCO_standard_epoch_info:
         return accs, avg_acc, cnt
     
     @staticmethod
-    def get_predictions(output_heatmaps, joints_data, post_process="default", kernel=11, target_type="GaussianHeatmap"):
+    def get_predictions(output_heatmaps, joints_data, post_process="default", kernel=11, target_type="GaussianHeatmap", use_udp: bool=False):
         """
         ***This is just a helper for shrinking the code volume***
 

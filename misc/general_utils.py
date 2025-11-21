@@ -37,6 +37,44 @@ def get_coco_loaders(image_resolution, model_name, phase: str, test_mode: bool, 
             test_mode=test_mode,  
         )
         return ds_val
+    
+
+def get_crowdpose_loaders(image_resolution, model_name, phase: str, test_mode: bool, no_normalization: bool = False):
+    import datasets.CustomDS.data_configs.CrowdPose_configs as CrowdPoseConfigs
+    from datasets.CustomDS.CrowdPoseDataset import TopDownCrowdPoseDataset
+
+    tr_ppl, val_ppl, te_ppl = CrowdPoseConfigs.get_pipelines(image_resolution=image_resolution, model_name=model_name, no_normalization=no_normalization)
+
+    if phase == 'train': 
+        ds_train = TopDownCrowdPoseDataset(
+            ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_train.json',
+            img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
+            data_cfg=CrowdPoseConfigs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=tr_ppl,
+            dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
+            test_mode=test_mode
+        )
+        return ds_train
+    elif phase == "val": 
+        ds_val = TopDownCrowdPoseDataset(
+            ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_val.json',
+            img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
+            data_cfg=CrowdPoseConfigs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=val_ppl,
+            dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
+            test_mode=test_mode
+        )
+        return ds_val
+    elif phase == "test": 
+        ds_test = TopDownCrowdPoseDataset(
+            ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_test.json',
+            img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
+            data_cfg=CrowdPoseConfigs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=te_ppl,
+            dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
+            test_mode=test_mode
+        )
+        return ds_test
 
 
 def perturb(model, device, X, y, y_t, loss_fn, epsilon, num_steps, step_size, rand_init=False):
@@ -117,8 +155,6 @@ def re_index_model_output(model, index_map):
     For COCO -> Ap10K, a naive way is this
     index_map = [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]
     reordered_output = output[:, index_map, :, :]
-    
-    
     """
     if index_map == "ap10k": 
         print('Re indexing output channels of model, only use for NAIVE zero shot testing from COCO to AP10K')

@@ -51,17 +51,21 @@ if not os.path.exists(coco_val_extract_dir):
 else:
     print(f"Skipping unzip — found existing directory: {coco_val_extract_dir}")
 
-download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
-if not os.path.exists(coco_train_extract_dir):
-    run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
-else:
-    print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
+# download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
+# if not os.path.exists(coco_train_extract_dir):
+#     run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+# else:
+#     print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
 
 download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_annotation)
 if not os.path.exists(coco_annotation_extract_dir):
     run(f"unzip -q -n {coco_annotation} -d ./datasets/COCO")
 else:
     print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
+
+
+os.makedirs("./datasets/COCO/person_detection_results", exist_ok=True)
+gdown_download('https://drive.google.com/uc?id=1ygw57X-mh0QBfENB-U5DsuSauGIu-8RB', './datasets/COCO/person_detection_results/COCO_val2017_detections_AP_H_56_person.json')
 
 ########################################  AP10K  ########################################
 # download dataset
@@ -123,3 +127,7 @@ gdown_download(url, './downloads/pose_hrnet_w48_256x192.pth')
 # Poserenset50 pretrained on AP10K (256x256)
 download_file("https://download.openmmlab.com/mmpose/animal/resnet/res50_ap10k_256x256-35760eb8_20211029.pth", 
     "./downloads/posersnet50_ap10_256x256.pth")
+
+# Vitpose_small (trained on COCO)
+url = "https://drive.google.com/uc?id=1MQlNJO1mPTghyz2uJjI6Z3ui_1CX77E-"
+gdown_download(url, './downloads/vitpose_small.pth')

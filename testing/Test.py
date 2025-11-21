@@ -88,6 +88,7 @@ class Test(object):
         self.epoch = 0
         self.log_path = log_path
         self.pck_thresholds = pck_thresholds
+        self.model_name = model_name
 
         self.device = get_device(device)
 
@@ -149,7 +150,7 @@ class Test(object):
                     self.per_joint_pck_accs[pck_thr].append(accs)
                     self.pck_accs[pck_thr].append(avg_acc)
 
-                preds, maxvals = COCO_standard_epoch_info.get_predictions(output, joints_data)
+                preds, maxvals = COCO_standard_epoch_info.get_predictions(output, joints_data, use_udp=True if self.model_name == "vitpose_small" else False) # You need to link UDP with the part that you create datasets
 
                 epoch_info._accumulate_results_for_mAP(preds, maxvals, joints_data)
                 epoch_info._accumulate_running_stats(loss, accs, avg_acc, cnt)

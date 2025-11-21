@@ -26,26 +26,24 @@ def main(exp_name,
          device=None,
          model_name = 'hrnet',
          disable_reindexing=False,
-         log_path = 'no_log_path_given'
+         log_path = 'no_log_path_given',
+         image_resolution='(256, 192)',
          ):
 
     set_seed_reproducability(seed=seed)
     get_device(device=device)
 
+    exp_name = f'{exp_name}/test_crowdpose_zeroshot'
     print("\nStarting experiment `%s` @ %s\n" % (exp_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     
     flip_test_images = not disable_flip_test_images
+    image_resolution = ast.literal_eval(image_resolution)
 
     print("\nLoading validation datasets...")
-    ds_val = TopDownCrowdPoseDataset(
-        ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_test.json',
-        img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
-        data_cfg=CrowdPoseConfigs.CrowdPose_data_cfg,
-        pipeline=CrowdPoseConfigs.CrowdPose_train_pipeline,
-        dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
-        test_mode=False
-    )
-    
+    from misc.general_utils import get_crowdpose_loaders
+    ds_val = get_crowdpose_loaders(image_resolution=image_resolution, model_name=model_name,
+                                phase="val", test_mode=False) # test_mode should not be false here
+
     reindexing = None
     if not disable_reindexing: 
         reindexing = 'crowdpose'
@@ -72,7 +70,6 @@ def main(exp_name,
     )
     test.run()
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_name", "-n", default='testing_crowdPose_zeroshot',
@@ -93,6 +90,7 @@ if __name__ == '__main__':
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
     parser.add_argument("--disable_reindexing", help="disables reindexing of output channels", action="store_true")
     parser.add_argument("--log_path", help="log dir", type=str)
+    parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
 
     args = parser.parse_args()
 

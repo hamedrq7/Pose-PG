@@ -70,8 +70,8 @@ def _calc_distances(preds, targets, mask, normalize):
         normalize (np.ndarray[N, D]): Typical value is heatmap_size
 
     Returns:
-        np.ndarray[K, N]: The normalized distances.
-          If target keypoints are missing, the distance is -1.
+        np.ndarray[K, N]: The normalized distances. \
+            If target keypoints are missing, the distance is -1.
     """
     N, K, _ = preds.shape
     # set mask=0 when normalize==0
@@ -95,8 +95,8 @@ def _distance_acc(distances, thr=0.5):
         thr (float): Threshold of the distances.
 
     Returns:
-        float: Percentage of distances below the threshold.
-          If all target keypoints are missing, return -1.
+        float: Percentage of distances below the threshold. \
+            If all target keypoints are missing, return -1.
     """
     distance_valid = distances != -1
     num_distance_valid = distance_valid.sum()
@@ -106,6 +106,7 @@ def _distance_acc(distances, thr=0.5):
 
 
 # matches the get_max_preds() in misc.utils.py
+
 def _get_max_preds(heatmaps):
     """Get keypoint predictions from score maps.
 
@@ -140,7 +141,6 @@ def _get_max_preds(heatmaps):
     preds = np.where(np.tile(maxvals, (1, 1, 2)) > 0.0, preds, -1)
     return preds, maxvals
 
-
 def pose_pck_accuracy(output, target, mask, thr=0.05, normalize=None):
     """Calculate the pose accuracy of PCK for each individual keypoint and the
     averaged accuracy across all keypoints from heatmaps.
@@ -152,10 +152,10 @@ def pose_pck_accuracy(output, target, mask, thr=0.05, normalize=None):
         The threshold (thr) of the normalized distance is commonly set
         as 0.05, 0.1 or 0.2 etc.
 
-        batch_size: N
-        num_keypoints: K
-        heatmap height: H
-        heatmap width: W
+        - batch_size: N
+        - num_keypoints: K
+        - heatmap height: H
+        - heatmap width: W
 
     Args:
         output (np.ndarray[N, K, H, W]): Model output heatmaps.
@@ -181,7 +181,6 @@ def pose_pck_accuracy(output, target, mask, thr=0.05, normalize=None):
 
     pred, _ = _get_max_preds(output)
     gt, _ = _get_max_preds(target)
-
     return keypoint_pck_accuracy(pred, gt, mask, thr, normalize)
 
 def keypoint_pck_accuracy(pred, gt, mask, thr, normalize):
@@ -195,8 +194,8 @@ def keypoint_pck_accuracy(pred, gt, mask, thr, normalize):
         The threshold (thr) of the normalized distance is commonly set
         as 0.05, 0.1 or 0.2 etc.
 
-        batch_size: N
-        num_keypoints: K
+        - batch_size: N
+        - num_keypoints: K
 
     Args:
         pred (np.ndarray[N, K, 2]): Predicted keypoint location.
@@ -254,6 +253,93 @@ def keypoint_auc(pred, gt, mask, normalize, num_step=20):
     return auc
 
 
+
+def keypoint_nme(pred, gt, mask, normalize_factor):
+    """Calculate the normalized mean error (NME).
+
+    Note:
+        - batch_size: N
+        - num_keypoints: K
+
+    Args:
+        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
+        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
+        mask (np.ndarray[N, K]): Visibility of the target. False for invisible
+            joints, and True for visible. Invisible joints will be ignored for
+            accuracy calculation.
+        normalize_factor (np.ndarray[N, 2]): Normalization factor.
+
+    Returns:
+        float: normalized mean error
+    """
+    distances = _calc_distances(pred, gt, mask, normalize_factor)
+    distance_valid = distances[distances != -1]
+    return distance_valid.sum() / max(1, len(distance_valid))
+
+
+def keypoint_epe(pred, gt, mask):
+    """Calculate the end-point error.
+
+    Note:
+        - batch_size: N
+        - num_keypoints: K
+
+    Args:
+        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
+        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
+        mask (np.ndarray[N, K]): Visibility of the target. False for invisible
+            joints, and True for visible. Invisible joints will be ignored for
+            accuracy calculation.
+
+    Returns:
+        float: Average end-point error.
+    """
+
+    distances = _calc_distances(
+        pred, gt, mask,
+        np.ones((pred.shape[0], pred.shape[2]), dtype=np.float32))
+    distance_valid = distances[distances != -1]
+    return distance_valid.sum() / max(1, len(distance_valid))
+
+
+
+def _taylor(heatmap, coord):
+    """Distribution aware coordinate decoding method.
+
+    Note:
+        - heatmap height: H
+        - heatmap width: W
+
+    Args:
+        heatmap (np.ndarray[H, W]): Heatmap of a particular joint type.
+        coord (np.ndarray[2,]): Coordinates of the predicted keypoints.
+
+    Returns:
+        np.ndarray[2,]: Updated coordinates.
+    """
+    H, W = heatmap.shape[:2]
+    px, py = int(coord[0]), int(coord[1])
+    if 1 < px < W - 2 and 1 < py < H - 2:
+        dx = 0.5 * (heatmap[py][px + 1] - heatmap[py][px - 1])
+        dy = 0.5 * (heatmap[py + 1][px] - heatmap[py - 1][px])
+        dxx = 0.25 * (
+            heatmap[py][px + 2] - 2 * heatmap[py][px] + heatmap[py][px - 2])
+        dxy = 0.25 * (
+            heatmap[py + 1][px + 1] - heatmap[py - 1][px + 1] -
+            heatmap[py + 1][px - 1] + heatmap[py - 1][px - 1])
+        dyy = 0.25 * (
+            heatmap[py + 2 * 1][px] - 2 * heatmap[py][px] +
+            heatmap[py - 2 * 1][px])
+        derivative = np.array([[dx], [dy]])
+        hessian = np.array([[dxx, dxy], [dxy, dyy]])
+        if dxx * dyy - dxy**2 != 0:
+            hessianinv = np.linalg.inv(hessian)
+            offset = -hessianinv @ derivative
+            offset = np.squeeze(np.array(offset.T), axis=0)
+            coord += offset
+    return coord
+
+
 def keypoints_from_heatmaps(heatmaps,
                             center,
                             scale,
@@ -267,10 +353,10 @@ def keypoints_from_heatmaps(heatmaps,
     the image.
 
     Note:
-        batch size: N
-        num keypoints: K
-        heatmap height: H
-        heatmap width: W
+        - batch size: N
+        - num keypoints: K
+        - heatmap height: H
+        - heatmap width: W
 
     Args:
         heatmaps (np.ndarray[N, K, H, W]): model predicted heatmaps.
@@ -342,9 +428,9 @@ def keypoints_from_heatmaps(heatmaps,
                 "post_process='unbiased' instead", DeprecationWarning)
             post_process = 'unbiased'
 
-    # # start processing
-    # if post_process == 'megvii':
-    #     heatmaps = _gaussian_blur(heatmaps, kernel=kernel)
+    # start processing
+    if post_process == 'megvii':
+        heatmaps = _gaussian_blur(heatmaps, kernel=kernel)
 
     N, K, H, W = heatmaps.shape
     if use_udp:
@@ -406,42 +492,6 @@ def keypoints_from_heatmaps(heatmaps,
 
 
 
-def _taylor(heatmap, coord):
-    """Distribution aware coordinate decoding method.
-
-    Note:
-        heatmap height: H
-        heatmap width: W
-
-    Args:
-        heatmap (np.ndarray[H, W]): Heatmap of a particular joint type.
-        coord (np.ndarray[2,]): Coordinates of the predicted keypoints.
-
-    Returns:
-        np.ndarray[2,]: Updated coordinates.
-    """
-    H, W = heatmap.shape[:2]
-    px, py = int(coord[0]), int(coord[1])
-    if 1 < px < W - 2 and 1 < py < H - 2:
-        dx = 0.5 * (heatmap[py][px + 1] - heatmap[py][px - 1])
-        dy = 0.5 * (heatmap[py + 1][px] - heatmap[py - 1][px])
-        dxx = 0.25 * (
-            heatmap[py][px + 2] - 2 * heatmap[py][px] + heatmap[py][px - 2])
-        dxy = 0.25 * (
-            heatmap[py + 1][px + 1] - heatmap[py - 1][px + 1] -
-            heatmap[py + 1][px - 1] + heatmap[py - 1][px - 1])
-        dyy = 0.25 * (
-            heatmap[py + 2 * 1][px] - 2 * heatmap[py][px] +
-            heatmap[py - 2 * 1][px])
-        derivative = np.array([[dx], [dy]])
-        hessian = np.array([[dxx, dxy], [dxy, dyy]])
-        if dxx * dyy - dxy**2 != 0:
-            hessianinv = np.linalg.inv(hessian)
-            offset = -hessianinv @ derivative
-            offset = np.squeeze(np.array(offset.T), axis=0)
-            coord += offset
-    return coord
-
 
 def post_dark_udp(coords, batch_heatmaps, kernel=3):
     """DARK post-pocessing. Implemented by udp. Paper ref: Huang et al. The
@@ -450,11 +500,12 @@ def post_dark_udp(coords, batch_heatmaps, kernel=3):
     Representation for Human Pose Estimation (CVPR 2020).
 
     Note:
-        batch size: B
-        num keypoints: K
-        num persons: N
-        height of heatmaps: H
-        width of heatmaps: W
+        - batch size: B
+        - num keypoints: K
+        - num persons: N
+        - height of heatmaps: H
+        - width of heatmaps: W
+
         B=1 for bottom_up paradigm where all persons share the same heatmap.
         B=N for top_down paradigm where each person has its own heatmaps.
 
@@ -464,7 +515,7 @@ def post_dark_udp(coords, batch_heatmaps, kernel=3):
         kernel (int): Gaussian kernel size (K) for modulation.
 
     Returns:
-        res (np.ndarray[N, K, 2]): Refined coordinates.
+        np.ndarray([N, K, 2]): Refined coordinates.
     """
     if not isinstance(batch_heatmaps, np.ndarray):
         batch_heatmaps = batch_heatmaps.cpu().numpy()
@@ -476,13 +527,10 @@ def post_dark_udp(coords, batch_heatmaps, kernel=3):
             cv2.GaussianBlur(heatmap, (kernel, kernel), 0, heatmap)
     np.clip(batch_heatmaps, 0.001, 50, batch_heatmaps)
     np.log(batch_heatmaps, batch_heatmaps)
-    batch_heatmaps = np.transpose(batch_heatmaps,
-                                  (2, 3, 0, 1)).reshape(H, W, -1)
-    batch_heatmaps_pad = cv2.copyMakeBorder(
-        batch_heatmaps, 1, 1, 1, 1, borderType=cv2.BORDER_REFLECT)
-    batch_heatmaps_pad = np.transpose(
-        batch_heatmaps_pad.reshape(H + 2, W + 2, B, K),
-        (2, 3, 0, 1)).flatten()
+
+    batch_heatmaps_pad = np.pad(
+        batch_heatmaps, ((0, 0), (0, 0), (1, 1), (1, 1)),
+        mode='edge').flatten()
 
     index = coords[..., 0] + 1 + (coords[..., 1] + 1) * (W + 2)
     index += (W + 2) * (H + 2) * np.arange(0, B * K).reshape(-1, K)
@@ -509,6 +557,7 @@ def post_dark_udp(coords, batch_heatmaps, kernel=3):
     return coords
 
 
+
 def _gaussian_blur(heatmaps, kernel=11):
     """Modulate heatmap distribution with Gaussian.
      sigma = 0.3*((kernel_size-1)*0.5-1)+0.8
@@ -518,10 +567,10 @@ def _gaussian_blur(heatmaps, kernel=11):
      sigma~=1 if k=3;
 
     Note:
-        batch_size: N
-        num_keypoints: K
-        heatmap height: H
-        heatmap width: W
+        - batch_size: N
+        - num_keypoints: K
+        - heatmap height: H
+        - heatmap width: W
 
     Args:
         heatmaps (np.ndarray[N, K, H, W]): model predicted heatmaps.
@@ -530,7 +579,7 @@ def _gaussian_blur(heatmaps, kernel=11):
             K=17 for sigma=3 and k=11 for sigma=2.
 
     Returns:
-        np.ndarray[N, K, H, W]: Modulated heatmap distribution.
+        np.ndarray ([N, K, H, W]): Modulated heatmap distribution.
     """
     assert kernel % 2 == 1
 
@@ -551,49 +600,34 @@ def _gaussian_blur(heatmaps, kernel=11):
     return heatmaps
 
 
-def keypoint_epe(pred, gt, mask):
-    """Calculate the end-point error.
+def keypoints_from_regression(regression_preds, center, scale, img_size):
+    """Get final keypoint predictions from regression vectors and transform
+    them back to the image.
 
     Note:
-        batch_size: N
-        num_keypoints: K
+        - batch_size: N
+        - num_keypoints: K
 
     Args:
-        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
-        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
-        mask (np.ndarray[N, K]): Visibility of the target. False for invisible
-            joints, and True for visible. Invisible joints will be ignored for
-            accuracy calculation.
+        regression_preds (np.ndarray[N, K, 2]): model prediction.
+        center (np.ndarray[N, 2]): Center of the bounding box (x, y).
+        scale (np.ndarray[N, 2]): Scale of the bounding box
+            wrt height/width.
+        img_size (list(img_width, img_height)): model input image size.
 
     Returns:
-        float: Average end-point error.
+        tuple:
+
+        - preds (np.ndarray[N, K, 2]): Predicted keypoint location in images.
+        - maxvals (np.ndarray[N, K, 1]): Scores (confidence) of the keypoints.
     """
+    N, K, _ = regression_preds.shape
+    preds, maxvals = regression_preds, np.ones((N, K, 1), dtype=np.float32)
 
-    distances = _calc_distances(
-        pred, gt, mask,
-        np.ones((pred.shape[0], pred.shape[2]), dtype=np.float32))
-    distance_valid = distances[distances != -1]
-    return distance_valid.sum() / max(1, len(distance_valid))
+    preds = preds * img_size
 
-def keypoint_nme(pred, gt, mask, normalize_factor):
-    """Calculate the normalized mean error (NME).
+    # Transform back to the image
+    for i in range(N):
+        preds[i] = transform_preds(preds[i], center[i], scale[i], img_size)
 
-    Note:
-        batch_size: N
-        num_keypoints: K
-
-    Args:
-        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
-        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
-        mask (np.ndarray[N, K]): Visibility of the target. False for invisible
-            joints, and True for visible. Invisible joints will be ignored for
-            accuracy calculation.
-        normalize_factor (np.ndarray[N, 2]): Normalization factor.
-
-    Returns:
-        float: normalized mean error
-    """
-    distances = _calc_distances(pred, gt, mask, normalize_factor)
-    distance_valid = distances[distances != -1]
-    return distance_valid.sum() / max(1, len(distance_valid))
-
+    return preds, maxvals
