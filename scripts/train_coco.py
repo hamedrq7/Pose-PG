@@ -65,7 +65,7 @@ def main(exp_name,
     ds_train = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
                                 phase="train", test_mode=False)
     ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
-                                phase="train", test_mode=False) # test_mode should not be false here
+                                phase="val", test_mode=False) # test_mode should not be false here
 
     train = COCOTrain(
         exp_name=exp_name,

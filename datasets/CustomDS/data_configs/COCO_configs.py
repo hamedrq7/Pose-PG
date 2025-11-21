@@ -268,7 +268,7 @@ def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
 
     ###### Val
     val_pipeline = [LoadImageFromFile()]
-    val_pipeline.append(TopDownAffine())
+    val_pipeline.append(TopDownAffine(use_udp=udp))
     val_pipeline.append(ToTensor())
     if not no_normalization:
         val_pipeline.append(NormalizeTensor(

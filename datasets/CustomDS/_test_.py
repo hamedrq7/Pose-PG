@@ -67,6 +67,19 @@ from torch.utils.data import DataLoader
     
 #     break
 
+from misc.general_utils import get_coco_loaders
+ds_val = get_coco_loaders(image_resolution=(256, 192), model_name='poseresnet',
+                            phase="val", test_mode=False) # test_mode should not be false here
+dl = DataLoader(ds_val, batch_size=2)
+
+for step, (image, target, target_weight, joints_data) in enumerate(dl):
+    print(image.shape)
+    print(target.shape)
+    print(target_weight.shape)
+    print(joints_data.keys())
+    break 
+exit()
+
 import datasets.CustomDS.data_configs.CrowdPose_configs as CrowdPoseConfigs
 from datasets.CustomDS.CrowdPoseDataset import TopDownCrowdPoseDataset
 

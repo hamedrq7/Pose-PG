@@ -43,7 +43,7 @@ class Test(object):
                  pre_trained_only=False,
                  pretrained_weight_path=None,
                  model_name = 'hrnet',
-                 re_order_index = False,
+                 re_order_index = None,
                  log_path = 'no_log_path_given',
                  pck_thresholds = [0.05, 0.2, 0.5]
                  ):
@@ -100,12 +100,13 @@ class Test(object):
 
         self.model = get_model(model_name=model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints,
             model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=pretrained_weight_path)
-        if not re_order_index is None:
+
+        if (not re_order_index is None):
             self.model = re_index_model_output(self.model, 
                 re_order_index)
             if re_order_index == "crowdpose":
                 self.model_nof_joints = 14 
-
+        
         self.loss_fn = get_loss_fn(self.loss, self.device)
         
         # load test dataset
