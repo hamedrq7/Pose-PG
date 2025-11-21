@@ -29,7 +29,7 @@ def get_coco_loaders(image_resolution, model_name, phase: str, test_mode: bool, 
         return ds_train
     elif phase == "val": 
         ds_val = TopDownCocoDataset(
-            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json',
+            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json',
             img_prefix=f'{COCO_configs.COCO_data_root}/val2017/',
             data_cfg=COCO_configs.get_data_cfg(image_resolution=image_resolution),
             pipeline=val_ppl,
