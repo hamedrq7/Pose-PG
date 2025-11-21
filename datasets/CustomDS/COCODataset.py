@@ -237,6 +237,7 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
             joints_3d = np.zeros((num_joints, 3), dtype=np.float32)
             joints_3d_visible = np.ones((num_joints, 3), dtype=np.float32)
             kpt_db.append({
+                'img_id': det_res['image_id'],
                 'image_file': image_file,
                 'center': center,
                 'scale': scale,

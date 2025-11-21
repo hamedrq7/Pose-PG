@@ -137,7 +137,7 @@ class Test(object):
                     image_flipped = flip_tensor(image, dim=-1)
                     output_flipped = self.model(image_flipped)
                     output_flipped = flip_back(output_flipped, self.ds_test.flip_pairs)
-                    output = (output + output_flipped) * 0.5
+                    output = (output + output_flipped) * 0.5                
 
                 loss = self.loss_fn(output, target, target_weight)
 

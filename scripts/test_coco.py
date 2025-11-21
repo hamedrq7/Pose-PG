@@ -43,7 +43,7 @@ def main(exp_name,
 
     from misc.general_utils import get_coco_loaders
     ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
-                                phase="val", test_mode=False) # test_mode should not be false here
+                                phase="val", test_mode=True) # test_mode should not be false here
 
     from testing.Test import Test
     test = Test(
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     parser.add_argument("--exp_name", "-n",
                         help="experiment name. A folder with this name will be created in the log_path.",
                         type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
-    
+    parser.add_argument("--batch_size", "-b", help="batch size", type=int, default=32)
     parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--pretrained_weight_path", "-p",
                         help="pre-trained weight path. Weights will be loaded before training starts.",

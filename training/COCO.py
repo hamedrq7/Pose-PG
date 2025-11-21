@@ -52,8 +52,8 @@ class COCO_standard_epoch_info:
         """
         accumulate running stats, the MSE loss, and avg pck acc
         """
-        self.running_acc += avg_acc.item()
-        self.running_loss += loss.item()
+        self.running_acc += avg_acc # .item()
+        self.running_loss += loss # .item()
 
     @staticmethod
     def get_pck_acc(output, target, target_weight, pck_thr=0.05):
@@ -93,6 +93,7 @@ class COCO_standard_epoch_info:
             post_process=post_process, 
             kernel=kernel, #  if self.ds_train.heatmap_sigma == 2. else 17, # carefull 
             target_type=target_type,
+            use_udp=True,
         )
         return preds, maxvals        
         

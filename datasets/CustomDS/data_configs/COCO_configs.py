@@ -231,7 +231,7 @@ def get_data_cfg(image_resolution):
         vis_thr=0.2,
         use_gt_bbox=False,
         det_bbox_thr=0.0,
-        bbox_file='data/coco/person_detection_results/'
+        bbox_file=f'{COCO_data_root}/person_detection_results/'
         'COCO_val2017_detections_AP_H_56_person.json',
         use_different_joint_weights=False
     )
