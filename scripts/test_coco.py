@@ -25,7 +25,8 @@ def main(exp_name,
          disable_flip_test_images=False,
          seed=1,
          device=None,
-         model_name = 'hrnet'
+         model_name = 'hrnet',
+         image_resolution='(256, 192)',
          ):
 
     # Seeds
@@ -36,18 +37,13 @@ def main(exp_name,
     print("\nStarting experiment `%s` @ %s\n" % (exp_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
     flip_test_images = not disable_flip_test_images
-    image_resolution = COCO_configs.COCO_data_cfg['image_size'][::-1]
+    image_resolution = ast.literal_eval(image_resolution)
 
     print("\nLoading validation datasets...")
 
-    # ds_val = COCODataset(
-    #     root_path=coco_root_path, data_version="val2017", is_train=False, use_gt_bboxes=(coco_bbox_path is None),
-    #     bbox_path=coco_bbox_path, image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
-    #     heatmap_sigma=2,
-    # )
-
-    ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info)
+    from misc.general_utils import get_coco_loaders
+    ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
+                                phase="train", test_mode=False) # test_mode should not be false here
 
     from testing.Test import Test
     test = Test(
@@ -63,7 +59,8 @@ def main(exp_name,
         device=device,
         pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
-        model_name=model_name
+        model_name=model_name,
+        log_path = f'{exp_name}/test_coco'
     )
     test.run()
 
@@ -85,7 +82,8 @@ if __name__ == '__main__':
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
-    
+    parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
+
     args = parser.parse_args()
 
     

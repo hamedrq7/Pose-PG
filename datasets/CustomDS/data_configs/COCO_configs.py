@@ -197,25 +197,6 @@ COCO_channel_cfg = dict(
     ])
 
 
-COCO_data_cfg = dict(
-    image_size=[192, 256],
-    heatmap_size=[48, 64],
-    heatmap_sigma = 2.0, # for 256, 192 set to 2, for 385, X set to 3
-    num_output_channels=COCO_channel_cfg['num_output_channels'],
-    num_joints=COCO_channel_cfg['dataset_joints'],
-    dataset_channel=COCO_channel_cfg['dataset_channel'],
-    inference_channel=COCO_channel_cfg['inference_channel'],
-    soft_nms=False,
-    nms_thr=1.0,
-    oks_thr=0.9,
-    vis_thr=0.2,
-    use_gt_bbox=False,
-    det_bbox_thr=0.0,
-    bbox_file='data/coco/person_detection_results/'
-    'COCO_val2017_detections_AP_H_56_person.json',
-    use_different_joint_weights=False
-)
-
 from datasets.CustomDS.augmentaions import (
     LoadImageFromFile, 
     TopDownRandomFlip,
@@ -228,52 +209,82 @@ from datasets.CustomDS.augmentaions import (
     Collect
 )
 
-COCO_train_pipeline = [
-    LoadImageFromFile(),
-    TopDownRandomFlip(flip_prob=0.5), 
-    TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3),
-    TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35), 
-    TopDownAffine(),
-    ToTensor(), 
-    NormalizeTensor(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]),
-    TopDownGenerateTarget(sigma=COCO_data_cfg['heatmap_sigma']), 
-    Collect(
+def get_data_cfg(image_resolution):
+    W, H = image_resolution[1], image_resolution[0]
+    heatmap_size = [W//4, H//4]
+    if (W==192 and H==256):
+        heatmap_sigma = 2.0 
+    elif (W==288 and H==384):
+        heatmap_sigma = 3.0
+
+    COCO_data_cfg = dict(
+        image_size=[W, H],
+        heatmap_size=heatmap_size,
+        heatmap_sigma=heatmap_sigma,
+        num_output_channels=COCO_channel_cfg['num_output_channels'],
+        num_joints=COCO_channel_cfg['dataset_joints'],
+        dataset_channel=COCO_channel_cfg['dataset_channel'],
+        inference_channel=COCO_channel_cfg['inference_channel'],
+        soft_nms=False,
+        nms_thr=1.0,
+        oks_thr=0.9,
+        vis_thr=0.2,
+        use_gt_bbox=False,
+        det_bbox_thr=0.0,
+        bbox_file='data/coco/person_detection_results/'
+        'COCO_val2017_detections_AP_H_56_person.json',
+        use_different_joint_weights=False
+    )
+
+    return COCO_data_cfg
+
+def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
+    data_cfg = get_data_cfg(image_resolution)
+
+    if model_name == 'poseresnet' or model_name == 'hrnet':
+        udp = False
+    elif model_name == 'vitpose_small':
+        udp = True 
+
+    ###### Train
+    train_pipeline = [LoadImageFromFile()]
+    train_pipeline.append(TopDownRandomFlip(flip_prob=0.5))
+    train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
+    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35))
+    train_pipeline.append(TopDownAffine(use_udp=udp))
+    train_pipeline.append(ToTensor())
+    if not no_normalization: 
+        train_pipeline.append(NormalizeTensor(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]))
+    train_pipeline.append(TopDownGenerateTarget(sigma=data_cfg['heatmap_sigma'], encoding='UDP' if udp else 'MSRA')) 
+    train_pipeline.append(Collect(
         keys=['img', 'target', 'target_weight'],
-        # meta_keys=[
-        #     'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
-        #     'rotation', 'bbox_score', 'flip_pairs'
-        # 
         meta_keys=[
             'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
             'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
         ]
-    ),
-]
+    ))
 
-
-COCO_val_pipeline = [
-    LoadImageFromFile(),
-    TopDownAffine(),
-    ToTensor(),
-    NormalizeTensor(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
-        ),
-    TopDownGenerateTarget(sigma=COCO_data_cfg['heatmap_sigma']), #### [?] 
-    Collect(
-        # keys=['img'],
-        # meta_keys=[
-        #     'image_file', 'center', 'scale', 'rotation', 'bbox_score',
-        #     'flip_pairs'
-        # ]
+    ###### Val
+    val_pipeline = [LoadImageFromFile()]
+    val_pipeline.append(TopDownAffine())
+    val_pipeline.append(ToTensor())
+    if not no_normalization:
+        val_pipeline.append(NormalizeTensor(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+            ))
+    val_pipeline.append(TopDownGenerateTarget(sigma=data_cfg['heatmap_sigma'], encoding='UDP' if udp else 'MSRA')) #### [?] 
+    val_pipeline.append(Collect(
         keys=['img', 'target', 'target_weight'],
         meta_keys=[
             'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
             'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
         ]
-    ),
-]
+    ))
 
-COCO_test_pipeline = COCO_val_pipeline
+
+    test_pipeline = val_pipeline
+
+    return train_pipeline, val_pipeline, test_pipeline

@@ -71,21 +71,21 @@ import datasets.CustomDS.data_configs.CrowdPose_configs as CrowdPoseConfigs
 from datasets.CustomDS.CrowdPoseDataset import TopDownCrowdPoseDataset
 
 train_ds = TopDownCrowdPoseDataset(
-    ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_trainval.json',
+    ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_train.json',
     img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
     data_cfg=CrowdPoseConfigs.CrowdPose_data_cfg,
     pipeline=CrowdPoseConfigs.CrowdPose_train_pipeline,
     dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
-    test_mode=True
+    test_mode=False
 )
 
 val_ds = TopDownCrowdPoseDataset(
-    ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_test.json',
+    ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_val.json',
     img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
     data_cfg=CrowdPoseConfigs.CrowdPose_data_cfg,
     pipeline=CrowdPoseConfigs.CrowdPose_train_pipeline,
     dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
-    test_mode=True
+    test_mode=False
 )
 
 test_ds = TopDownCrowdPoseDataset(
@@ -94,7 +94,7 @@ test_ds = TopDownCrowdPoseDataset(
     data_cfg=CrowdPoseConfigs.CrowdPose_data_cfg,
     pipeline=CrowdPoseConfigs.CrowdPose_train_pipeline,
     dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
-    test_mode=True
+    test_mode=False
 )
 
 dl = DataLoader(train_ds, batch_size=2)

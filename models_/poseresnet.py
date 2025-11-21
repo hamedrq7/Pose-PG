@@ -59,6 +59,9 @@ class PoseResNet(nn.Module):
             padding=0
         )
 
+    def get_joint_prototypes(self):
+        return self.final_layer
+    
     def _make_layer(self, block, planes, blocks, stride=1, bn_momentum=0.1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
@@ -151,11 +154,12 @@ if __name__ == '__main__':
         device = torch.device('cpu')
 
     print(device)
-
-    # model = model.to(device)
-    # print(model)
-    # from torchinfo import summary
-    # summary(model, (1, 3, 256, 192))
+    print(model)
+    model = model.to(device)
+    print(model)
+    from torchinfo import summary
+    summary(model, (1, 3, 256, 192))
+    exit()
 
     pretrained_weight_path = 'C:/Users/hamed/Downloads/imagenet_linf_8.pt'
     

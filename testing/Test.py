@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import sys 
 
 import torch
 from torch.utils.data.dataloader import DataLoader
@@ -15,6 +16,7 @@ from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
 from training.COCO import COCO_standard_epoch_info
+from misc.log_utils import Logger
 
 import numpy as np 
 
@@ -90,11 +92,19 @@ class Test(object):
         self.device = get_device(device)
 
         os.makedirs(self.log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting    
+        sys.stdout = Logger("{}/run.log".format(log_path))
+        # sys.stderr = sys.stdout
+        command_line_args = sys.argv
+        command = " ".join(command_line_args)
+        print(f"The command that ran this script: {command}")
 
         self.model = get_model(model_name=model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints,
             model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=pretrained_weight_path)
-        if re_order_index: 
-            self.model = re_index_model_output(self.model, [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16])
+        if not re_order_index is None:
+            self.model = re_index_model_output(self.model, 
+                re_order_index)
+            if re_order_index == "crowdpose":
+                self.model_nof_joints = 14 
 
         self.loss_fn = get_loss_fn(self.loss, self.device)
         

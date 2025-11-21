@@ -69,10 +69,28 @@ url = "https://drive.google.com/uc?id=1-FNNGcdtAQRehYYkGY1y4wzFNg4iWNad"
 ap10_zip_path = "./downloads/ap-10k.zip"
 gdown_download(url, ap10_zip_path)
 
-if not os.path.exists("./downloads/ap-10k"):
+if not os.path.exists("./datasets/ap-10k"):
     run(f"unzip -q -n {ap10_zip_path} -d ./datasets")
 else:
-    print(f"Skipping unzip — found existing directory: {coco_annotation_extract_dir}")
+    print(f"Skipping unzip — found existing directory: ./datasets/ap-10k")
+
+########################################  CrowdPose  ########################################
+# download dataset
+url = "https://drive.google.com/uc?id=1VprytECcLtU4tKP32SYi_7oDRbw7yUTL"
+crowdpose_zip_path = "./downloads/crowdpose.zip"
+crowdpose_extract_dir = './datasets/CrowdPose'
+gdown_download(url, crowdpose_zip_path)
+
+if not os.path.exists(crowdpose_extract_dir):
+    run(f"unzip -q -n {crowdpose_zip_path} -d {crowdpose_extract_dir}")
+else:
+    print(f"Skipping unzip — found existing directory: {crowdpose_extract_dir}")
+
+os.makedirs("./datasets/CrowdPose/annotations", exist_ok=True)
+gdown_download('https://drive.google.com/uc?id=18-IwNa6TOGQPE0RqGNjNY1cJOfNC7MXj', './datasets/CrowdPose/annotations/crowdpose_val.json')
+gdown_download('https://drive.google.com/uc?id=13xScmTWqO6Y6m_CjiQ-23ptgX9sC-J9I', './datasets/CrowdPose/annotations/crowdpose_trainval.json')
+gdown_download('https://drive.google.com/uc?id=1b3APtKpc43dx_5FxizbS-EWGvd-zl7Lb', './datasets/CrowdPose/annotations/crowdpose_train.json')
+gdown_download('https://drive.google.com/uc?id=1FUzRj-dPbL1OyBwcIX2BgFPEaY5Yrz7S', './datasets/CrowdPose/annotations/crowdpose_test.json')
 
 ########################################  Model Weights  ########################################
 # standard resnet50

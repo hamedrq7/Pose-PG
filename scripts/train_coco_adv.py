@@ -13,6 +13,7 @@ from datasets.COCO import COCODataset
 from training.COCO_adv import COCOAdv_Train
 from misc.log_utils import Logger, make_dir
 from datasets.CustomDS.augmentaions import NormalizeTensor
+from misc.general_utils import get_device, set_seed_reproducability
 
 def main(exp_name,
          epochs=210,
@@ -50,24 +51,11 @@ def main(exp_name,
     
     
     # Seeds
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.enabled = True  # Enables cudnn
-        torch.backends.cudnn.benchmark = True  # It should improve runtime performances when batch shape is fixed. See https://discuss.pytorch.org/t/what-does-torch-backends-cudnn-benchmark-do/5936
-        torch.backends.cudnn.deterministic = True  # To have ~deterministic results
+    set_seed_reproducability(seed)
 
     # torch device
-    if device is not None:
-        device = torch.device(device)
-    else:
-        if torch.cuda.is_available():
-            device = torch.device('cuda:0')
-        else:
-            device = torch.device('cpu')
-
+    device = get_device(device)
+    
     print(device)
 
     print("\nStarting experiment `%s` @ %s\n" % (exp_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
@@ -83,26 +71,11 @@ def main(exp_name,
     print("\nLoading train and validation datasets...")
 
     # load train and val datasets
-    from datasets.CustomDS.COCODataset import TopDownCocoDataset
-    import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
-
-    ## Modfiy normalization: the normalization step is added to first on model instead of dataloader
-    train_data_pipeline = COCO_configs.COCO_train_pipeline
-    train_deleted_module = train_data_pipeline.pop(6)
-    assert isinstance(train_deleted_module, NormalizeTensor), 'Delete the NormalizeTensor module'
-
-    val_data_pipeline = COCO_configs.COCO_val_pipeline
-    val_deleted_module = val_data_pipeline.pop(3)
-    assert isinstance(val_deleted_module, NormalizeTensor), 'Delete the NormalizeTensor module'
-    
-    print('train data pipeline', train_data_pipeline)
-    print('val data pipeline', val_data_pipeline)
-
-    ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=train_data_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
-
-    ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=val_data_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False) # test_mode ? [?]
+    from misc.general_utils import get_coco_loaders
+    ds_train = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
+                                phase="train", test_mode=False, no_normalization=True)
+    ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
+                                phase="train", test_mode=False, no_normalization=True) # test_mode should not be false here
 
     train = COCOAdv_Train(
         exp_name=exp_name,

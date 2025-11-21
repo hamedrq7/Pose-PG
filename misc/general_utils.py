@@ -4,11 +4,39 @@ import random
 import numpy as np 
 from models_.poseresnet import PoseResNet
 from models_.hrnet import HRNet
+from models_.vitpose import VitPose
 from misc.checkpoint import load_checkpoint
 from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 
 from torch.autograd import Variable
 import torch.optim as optim
+
+def get_coco_loaders(image_resolution, model_name, phase: str, test_mode: bool, no_normalization: bool = False):
+    import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
+    from datasets.CustomDS.COCODataset import TopDownCocoDataset
+
+    tr_ppl, val_ppl, te_ppl = COCO_configs.get_pipelines(image_resolution=image_resolution, model_name=model_name, no_normalization=no_normalization)
+
+    if phase == 'train': 
+        ds_train = TopDownCocoDataset(
+            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json',
+            img_prefix=f'{COCO_configs.COCO_data_root}/train2017/',
+            data_cfg=COCO_configs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=tr_ppl,
+            dataset_info=COCO_configs.COCO_dataset_info,
+            test_mode=test_mode, 
+        )
+        return ds_train
+    elif phase == "val": 
+        ds_val = TopDownCocoDataset(
+            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json',
+            img_prefix=f'{COCO_configs.COCO_data_root}/val2017/',
+            data_cfg=COCO_configs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=val_ppl,
+            dataset_info=COCO_configs.COCO_dataset_info,
+            test_mode=test_mode,  
+        )
+        return ds_val
 
 
 def perturb(model, device, X, y, y_t, loss_fn, epsilon, num_steps, step_size, rand_init=False):
@@ -71,7 +99,8 @@ def get_loss_fn(loss: str, device, use_target_weight=True):
     else:
         raise NotImplementedError
     return loss_fn
-    
+
+
 class ReIndexWrapper(nn.Module):
     def __init__(self, model, index_map):
         super().__init__()
@@ -88,9 +117,15 @@ def re_index_model_output(model, index_map):
     For COCO -> Ap10K, a naive way is this
     index_map = [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16]
     reordered_output = output[:, index_map, :, :]
+    
+    
     """
-    print('Re indexing output channels of model, only use for NAIVE zero shot testing from COCO to AP10K')
-    return ReIndexWrapper(model, index_map)
+    if index_map == "ap10k": 
+        print('Re indexing output channels of model, only use for NAIVE zero shot testing from COCO to AP10K')
+        return ReIndexWrapper(model, [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16])
+    elif index_map == "crowdpose": 
+        print("Reindexing for COCO-CrowdPose")
+        return ReIndexWrapper(model, [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 0])
 
 def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, pretrained_weight_path=None): 
     # load model
@@ -100,7 +135,8 @@ def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, 
     elif model_name == 'poseresnet':
         model = PoseResNet(resnet_size=model_c, nof_joints=model_nof_joints, 
                         bn_momentum=model_bn_momentum).to(device)
-
+    elif model_name == "vitpose_small":
+        model = VitPose()
     if not pretrained_weight_path is None:
         model = load_pretrained(model, pretrained_weight_path, device=device)
     
@@ -118,8 +154,12 @@ def load_pretrained(model, pretrained_weight_path, device):
     # Its from the hrnet repo: https://github.com/leoxiaobin/deep-high-resolution-net.pytorch/tree/master
     # pretrained_weight_path = 'C:/Users/hamed/Downloads/resnet50-19c8e357.pth'
 
+    ## Models From VitPose repo: 
+    if 'state_dict' in checkpoint.keys() and len(checkpoint.keys()) == 1: 
+        new_state_dict = checkpoint['state_dict']
+
     ### The models from MadyLab are a bit weird 
-    if 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'schedule' in checkpoint.keys() and 'epoch' in checkpoint.keys():
+    elif 'model' in checkpoint.keys() and 'optimizer' in checkpoint.keys() and 'schedule' in checkpoint.keys() and 'epoch' in checkpoint.keys():
         if len(checkpoint.keys()) == 4 or ('amp' in checkpoint.keys() and len(checkpoint.keys()) == 5): 
         # https://www.dropbox.com/scl/fi/uwr6kbkchhi2t34czbzvh/imagenet_linf_8.pt?rlkey=fxnlz3irzmhvx8cbej7ye3fj5&st=l5msjf1p&dl=1
             print('Model trained from MadryLab...')

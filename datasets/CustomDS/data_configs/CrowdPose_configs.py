@@ -1,4 +1,4 @@
-CrowdPose_data_root = ''
+CrowdPose_data_root = 'datasets/CrowdPose'
 
 CrowdPose_dataset_info = dict(
     dataset_name='crowdpose',
@@ -244,29 +244,3 @@ CrowdPose_val_pipeline = [
 
 CrowdPose_test_pipeline = CrowdPose_val_pipeline
 
-data = dict(
-    samples_per_gpu=64,
-    workers_per_gpu=2,
-    val_dataloader=dict(samples_per_gpu=32),
-    test_dataloader=dict(samples_per_gpu=32),
-    train=dict(
-        type='TopDownCrowdPoseDataset',
-        ann_file=f'{data_root}/annotations/mmpose_crowdpose_trainval.json',
-        img_prefix=f'{data_root}/images/',
-        data_cfg=data_cfg,
-        pipeline=train_pipeline,
-        dataset_info={{_base_.dataset_info}}),
-    val=dict(
-        type='TopDownCrowdPoseDataset',
-        ann_file=f'{data_root}/annotations/mmpose_crowdpose_test.json',
-        img_prefix=f'{data_root}/images/',
-        data_cfg=data_cfg,
-        pipeline=val_pipeline,
-        dataset_info={{_base_.dataset_info}}),
-    test=dict(
-        type='TopDownCrowdPoseDataset',
-        ann_file=f'{data_root}/annotations/mmpose_crowdpose_test.json',
-        img_prefix=f'{data_root}/images/',
-        data_cfg=data_cfg,
-        pipeline=test_pipeline,
-        dataset_info={{_base_.dataset_info}}))

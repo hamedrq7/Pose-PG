@@ -5,7 +5,6 @@ from xtcocotools.cocoeval import COCOeval
 
 from datasets.CustomDS.COCODataset import TopDownCocoDataset
 
-@DATASETS.register_module()
 class TopDownCrowdPoseDataset(TopDownCocoDataset):
     """CrowdPoseDataset dataset for top-down pose estimation.
 
@@ -46,7 +45,8 @@ class TopDownCrowdPoseDataset(TopDownCocoDataset):
                  data_cfg,
                  pipeline,
                  dataset_info=None,
-                 test_mode=False):
+                 test_mode=False,
+                 indicies=None):
 
         super(TopDownCocoDataset, self).__init__(
             ann_file,
@@ -54,8 +54,10 @@ class TopDownCrowdPoseDataset(TopDownCocoDataset):
             data_cfg,
             pipeline,
             dataset_info=dataset_info,
-            test_mode=test_mode)
-
+            test_mode=test_mode,
+            )
+        self.indicies = indicies
+        
         self.use_gt_bbox = data_cfg['use_gt_bbox']
         self.bbox_file = data_cfg['bbox_file']
         self.det_bbox_thr = data_cfg.get('det_bbox_thr', 0.0)

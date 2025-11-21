@@ -201,11 +201,11 @@ class HRNet(nn.Module):
 
 
 if __name__ == '__main__':
-    # model = HRNet(48, 17, 0.1)
-    model = HRNet(32, 17, 0.1)
+    model = HRNet(48, 17, 0.1)
+    # model = HRNet(32, 17, 0.1)
 
     print(model)
-
+    
     # model.load_state_dict(
     #     # torch.load('./weights/pose_hrnet_w48_384x288.pth')
     #     torch.load('./weights/pose_hrnet_w32_256x192.pth')
@@ -221,6 +221,9 @@ if __name__ == '__main__':
     print(device)
 
     model = model.to(device)
+    from torchinfo import summary
+    summary(model, (1, 3, 256, 192))
+    exit()
 
     y = model(torch.ones(1, 3, 384, 288).to(device))
     print(y.shape)

@@ -12,6 +12,7 @@ sys.path.insert(1, os.getcwd())
 from datasets.COCO import COCODataset
 from training.COCO import COCOTrain
 from misc.log_utils import Logger, make_dir
+from misc.general_utils import set_seed_reproducability, get_device
 
 def main(exp_name,
          epochs=210,
@@ -43,24 +44,10 @@ def main(exp_name,
     
     
     # Seeds
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.enabled = True  # Enables cudnn
-        torch.backends.cudnn.benchmark = True  # It should improve runtime performances when batch shape is fixed. See https://discuss.pytorch.org/t/what-does-torch-backends-cudnn-benchmark-do/5936
-        torch.backends.cudnn.deterministic = True  # To have ~deterministic results
+    set_seed_reproducability(seed)
 
     # torch device
-    if device is not None:
-        device = torch.device(device)
-    else:
-        if torch.cuda.is_available():
-            device = torch.device('cuda:0')
-        else:
-            device = torch.device('cpu')
-
+    device = get_device(device)
     print(device)
 
     print("\nStarting experiment `%s` @ %s\n" % (exp_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
@@ -74,25 +61,11 @@ def main(exp_name,
     print("\nLoading train and validation datasets...")
 
     # load train and val datasets
-    from datasets.CustomDS.COCODataset import TopDownCocoDataset
-    import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
-
-    ds_train = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_train_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False)
-
-    ds_val = TopDownCocoDataset(f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json', img_prefix=f'{COCO_configs.COCO_data_root}/val2017/', 
-                        data_cfg=COCO_configs.COCO_data_cfg, pipeline=COCO_configs.COCO_val_pipeline, dataset_info=COCO_configs.COCO_dataset_info, test_mode=False) # test_mode ? [?]
-
-    # ds_train = COCODataset(
-    #     root_path=COCO_configs.COCO_data_root, data_version="train2017", is_train=True, use_gt_bboxes=True, bbox_path="",
-    #     image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True, scale=True, scale_factor=0.35, 
-    #     rotate_prob=0.5, rotation_factor=45., half_body_prob=0.3, use_different_joints_weight=False, heatmap_sigma=2.0, # for 192, 256 sigma should be 2.0
-    # )
-
-    # ds_val = COCODataset(
-    #     root_path=COCO_configs.COCO_data_root, data_version="val2017", is_train=False, use_gt_bboxes=(True),
-    #     bbox_path=None, image_width=image_resolution[1], image_height=image_resolution[0], color_rgb=True,
-    # )
+    from misc.general_utils import get_coco_loaders
+    ds_train = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
+                                phase="train", test_mode=False)
+    ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
+                                phase="train", test_mode=False) # test_mode should not be false here
 
     train = COCOTrain(
         exp_name=exp_name,
@@ -158,9 +131,6 @@ if __name__ == '__main__':
     parser.add_argument("--model_bn_momentum", help="HRNet bn_momentum parameter", type=float, default=0.1)
     parser.add_argument("--disable_flip_test_images", help="disable image flip during evaluation", action="store_true")
     parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
-    # parser.add_argument("--coco_root_path", help="COCO dataset root path", type=str, default="./datasets/COCO")
-    # parser.add_argument("--coco_bbox_path", help="path of detected bboxes to use during evaluation",
-    #                     type=str, default=None)
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
 

@@ -51,8 +51,11 @@ def main(exp_name,
         dataset_info=AP10K_configs.AP10K_dataset_info,
         test_mode=True)
     
-    print('Re indexing: ', not disable_reindexing)
-    
+    reindexing = None
+    if not disable_reindexing: 
+        reindexing = "ap10k"
+
+    print('Re indexing: ', reindexing)
     from testing.Test import Test
     test = Test(
         ds_test=ds_val, 
@@ -68,7 +71,7 @@ def main(exp_name,
         pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
         model_name=model_name,
-        re_order_index=not disable_reindexing,
+        re_order_index=reindexing,
         log_path = os.path.join(log_path, exp_name)
     )
     test.run()

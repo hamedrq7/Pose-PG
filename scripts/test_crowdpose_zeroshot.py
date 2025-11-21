@@ -9,13 +9,13 @@ import numpy as np
 import torch
 
 sys.path.insert(1, os.getcwd())
+
+import datasets.CustomDS.data_configs.CrowdPose_configs as CrowdPoseConfigs
 from misc.general_utils import set_seed_reproducability, get_device
-from datasets.CustomDS.COCODataset import TopDownCocoDataset
-import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
-from datasets.CustomDS.augmentaions import NormalizeTensor
+from datasets.CustomDS.CrowdPoseDataset import TopDownCrowdPoseDataset
 
 def main(exp_name,
-         batch_size=16,
+         batch_size=1,
          num_workers=4,
          pretrained_weight_path=None,
          model_c=48,
@@ -25,54 +25,35 @@ def main(exp_name,
          seed=1,
          device=None,
          model_name = 'hrnet',
-        image_resolution='(256, 192)',
+         disable_reindexing=False,
+         log_path = 'no_log_path_given'
          ):
 
-    # Seeds
-    set_seed_reproducability(seed)
-
-    device = get_device(device)
+    set_seed_reproducability(seed=seed)
+    get_device(device=device)
 
     print("\nStarting experiment `%s` @ %s\n" % (exp_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-
+    
     flip_test_images = not disable_flip_test_images
-    image_resolution = ast.literal_eval(image_resolution)
-    print('image_resolution', image_resolution)
 
-    # ## Modifying some other stuff: 
-    # ds_info = COCO_configs.COCO_dataset_info
-    # ds_info['joint_weights'] = [
-    #     1., 1., 1., 1., 1., 1., 1., 1.2, 1.2, 1.5, 1.5, 1., 1., 1.2, 1.2, 1.5,
-    #     1.5
-    # ]
-    # # ds_info['joint_weights'] = [
-    # #     0., # nose
-    # #     0., # left_eye
-    # #     0., # right_eye
-    # #     0., # left_ear
-    # #     0., # right_ear
-    # #     0., # left_shoulder
-    # #     0., # right_shoulder
-    # #     1., # left_elbow
-    # #     1., # right_elbow
-    # #     0., # left_wrist
-    # #     0., # right_wrist
-    # #     0., # left_hip
-    # #     0., # right_hip
-    # #     0., # left_knee
-    # #     0., # right_knee
-    # #     0., # left_ankle
-    # #     0., # right_ankle
-    # # ]
-    # # ds_cfg = COCO_configs.COCO_data_cfg
-    # # ds_cfg['use_different_joint_weights'] = True
+    print("\nLoading validation datasets...")
+    ds_val = TopDownCrowdPoseDataset(
+        ann_file=f'{CrowdPoseConfigs.CrowdPose_data_root}/annotations/crowdpose_test.json',
+        img_prefix=f'{CrowdPoseConfigs.CrowdPose_data_root}/images/',
+        data_cfg=CrowdPoseConfigs.CrowdPose_data_cfg,
+        pipeline=CrowdPoseConfigs.CrowdPose_train_pipeline,
+        dataset_info=CrowdPoseConfigs.CrowdPose_dataset_info,
+        test_mode=False
+    )
+    
+    reindexing = None
+    if not disable_reindexing: 
+        reindexing = 'crowdpose'
 
-    from misc.general_utils import get_coco_loaders
-    ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
-                                phase="train", test_mode=False, no_normalization=True) # test_mode should not be false here
-
-    from testing.TestRobust import TestRobust
-    test = TestRobust(
+    print('Re indexing: ', reindexing)
+    
+    from testing.Test import Test
+    test = Test(
         ds_test=ds_val, 
         batch_size=batch_size,
         num_workers=num_workers, 
@@ -83,32 +64,36 @@ def main(exp_name,
         model_bn_momentum=model_bn_momentum,
         flip_test_images=flip_test_images,
         device=device,
+        pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
-        model_name=model_name
+        model_name=model_name,
+        re_order_index=reindexing,
+        log_path = os.path.join(log_path, exp_name)
     )
     test.run()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--exp_name", "-n",
+    parser.add_argument("--exp_name", "-n", default='testing_crowdPose_zeroshot',
                         help="experiment name. A folder with this name will be created in the log_path.",
-                        type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
+                        type=str, # default=str(datetime.now().strftime("%Y%m%d_%H%M"))
+                        )
     parser.add_argument("--batch_size", "-b", help="batch size", type=int, default=16)
     parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--pretrained_weight_path", "-p",
                         help="pre-trained weight path. Weights will be loaded before training starts.",
                         type=str, default=None)
     parser.add_argument("--model_c", help="HRNet c parameter", type=int, default=48)
-    parser.add_argument("--model_nof_joints", help="HRNet nof_joints parameter", type=int, default=17)
+    parser.add_argument("--model_nof_joints", help="HRNet nof_joints parameter", type=int, default=14)
     parser.add_argument("--model_bn_momentum", help="HRNet bn_momentum parameter", type=float, default=0.1)
     parser.add_argument("--disable_flip_test_images", help="disable image flip during evaluation", action="store_true")
     parser.add_argument("--seed", "-s", help="seed", type=int, default=1)
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
-    parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
+    parser.add_argument("--disable_reindexing", help="disables reindexing of output channels", action="store_true")
+    parser.add_argument("--log_path", help="log dir", type=str)
 
     args = parser.parse_args()
 
-    
     main(**args.__dict__)
