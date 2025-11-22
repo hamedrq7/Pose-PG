@@ -15,6 +15,7 @@ from misc.general_utils import NormalizeByChannelMeanStd, get_device, get_model,
 from models_.hrnet import HRNet
 from models_.poseresnet import PoseResNet
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
+from training.COCO import COCO_standard_epoch_info
 
 import numpy as np 
 
@@ -41,7 +42,6 @@ class TestRobust(object):
                  device=None,
                  pretrained_weight_path=None,
                  model_name = 'hrnet',
-                 re_order_index = False,
                  log_path = 'no_log_path_given',
                  pck_thresholds = [0.05, 0.2, 0.5],
                  mean = [0.485, 0.456, 0.406],
@@ -101,9 +101,6 @@ class TestRobust(object):
         ).to(device)
         self.model = nn.Sequential(normalizer, self.model)
 
-        if re_order_index: 
-            self.model = re_index_model_output(self.model, [2, 0, 1, 3, 4, 5, 8, 6, 9, 7, 10, 11, 14, 12, 15, 13, 16])
-
         self.loss_fn = get_loss_fn(self.loss, self.device, True)
 
         # load test dataset
@@ -124,72 +121,45 @@ class TestRobust(object):
         adv_pck_accs = {x: [] for x in self.pck_thresholds}
 
         num_samples = len(self.ds_test)
+
+        cln_epoch_info = COCO_standard_epoch_info(-1, 'cln_test', len(self.ds_test), self.model_nof_joints)
+        adv_epoch_info = COCO_standard_epoch_info(-1, 'adv_test', len(self.ds_test), self.model_nof_joints)
         
-        cln_all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
-        cln_all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
-        cln_image_paths = []
-        
-        adv_all_preds = np.zeros((num_samples, self.model_nof_joints, 3), dtype=np.float32)
-        adv_all_boxes = np.zeros((num_samples, 7), dtype=np.float32)
-        adv_image_paths = []
-        
-        
-        idx = 0
         self.model.eval()
         with torch.no_grad():
             for step, (image, target, target_weight, joints_data) in enumerate(tqdm(self.dl_test)):
                 image = image.to(self.device)
                 target = target.to(self.device)
                 target_weight = target_weight.to(self.device)
-                num_images = image.shape[0]
-
-                # measure elapsed time
-                c = joints_data['center'].numpy()
-                s = joints_data['scale'].numpy()
-                score = joints_data['score'].numpy()
-                pixel_std = 200  # ToDo Parametrize this
-                bbox_id = joints_data['bbox_id'].numpy()
 
                 ##################################### CLEAN #####################################
                 cln_output = self.model(image)
                 if self.flip_test_images:
                     image_flipped = flip_tensor(image, dim=-1)
                     cln_output_flipped = self.model(image_flipped)
-
                     cln_output_flipped = flip_back(cln_output_flipped, self.ds_test.flip_pairs)
-
                     cln_output = (cln_output + cln_output_flipped) * 0.5
 
                 cln_loss = self.loss_fn(cln_output, target, target_weight)
 
                 # Evaluate accuracy
                 for pck_thr in self.pck_thresholds[::-1]: 
-                    cln_accs, cln_avg_acc, cln_cnt = pose_pck_accuracy(cln_output.detach().cpu().numpy(), 
-                                                            target.detach().cpu().numpy(), 
-                                                            mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
-                                                            thr=pck_thr)
+                    cln_accs, cln_avg_acc, cln_cnt = COCO_standard_epoch_info.get_pck_acc(
+                        cln_output, 
+                        target, 
+                        target_weight,
+                        pck_thr
+                    )
                     cln_per_joint_pck_accs[pck_thr].append(cln_accs)
                     cln_pck_accs[pck_thr].append(cln_avg_acc)
-        
-                cln_preds, cln_maxvals = keypoints_from_heatmaps(
-                    heatmaps=cln_output.detach().cpu().numpy(),
-                    center=c, 
-                    scale=s,
-                    post_process="default", 
-                    kernel=11, #  if self.ds_test.heatmap_sigma == 2. else 17, # carefull 
-                    target_type="GaussianHeatmap",
+
+                cln_preds, cln_maxvals = COCO_standard_epoch_info.get_predictions(
+                    cln_output, joints_data, use_udp=True if self.model_name == 'vitpose_small' else False
                 )
 
-                cln_all_preds[idx:idx + num_images, :, 0:2] = cln_preds[:, :, 0:2] # .detach().cpu().numpy()
-                cln_all_preds[idx:idx + num_images, :, 2:3] = cln_maxvals # .detach().cpu().numpy()
-                cln_all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
-                cln_all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
-                cln_all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
-                cln_all_boxes[idx:idx + num_images, 5] = score
-                cln_all_boxes[idx:idx + num_images, 6] = bbox_id
-                cln_image_paths.extend(joints_data['imgPath'])
-                cln_mean_loss_test += cln_loss.item()
-                cln_mean_acc_test += cln_avg_acc.item()
+                cln_epoch_info._accumulate_running_stats(cln_loss, cln_accs, cln_avg_acc, cln_cnt)
+                cln_epoch_info._accumulate_results_for_mAP(cln_preds, cln_maxvals, joints_data)
+
 
                 ##################################### ADV #####################################
                 adv_image = perturb(self.model, self.device, image, target, target_weight, self.loss_fn, 
@@ -204,40 +174,22 @@ class TestRobust(object):
                 adv_loss = self.loss_fn(adv_output, target, target_weight)
 
                 # Evaluate accuracy
-                for pck_thr in self.pck_thresholds[::-1]: 
-                    adv_accs, adv_avg_acc, adv_cnt = pose_pck_accuracy(adv_output.detach().cpu().numpy(), 
-                                                            target.detach().cpu().numpy(), 
-                                                            mask=target_weight.detach().cpu().numpy().squeeze(-1) > 0,
-                                                            thr=pck_thr)
+                for pck_thr in self.pck_thresholds[::-1]:
+                    adv_accs, adv_avg_acc, adv_cnt = COCO_standard_epoch_info.get_pck_acc(adv_output, target, target_weight, 
+                                                                               pck_thr=pck_thr)
                     adv_per_joint_pck_accs[pck_thr].append(adv_accs)
                     adv_pck_accs[pck_thr].append(adv_avg_acc)
-        
-                adv_preds, adv_maxvals = keypoints_from_heatmaps(
-                    heatmaps=adv_output.detach().cpu().numpy(),
-                    center=c, 
-                    scale=s,
-                    post_process="default", 
-                    kernel=11, #  if self.ds_test.heatmap_sigma == 2. else 17, # carefull 
-                    target_type="GaussianHeatmap",
-                )
 
-                adv_all_preds[idx:idx + num_images, :, 0:2] = adv_preds[:, :, 0:2] # .detach().cpu().numpy()
-                adv_all_preds[idx:idx + num_images, :, 2:3] = adv_maxvals # .detach().cpu().numpy()
-                adv_all_boxes[idx:idx + num_images, 0:2] = c[:, 0:2]
-                adv_all_boxes[idx:idx + num_images, 2:4] = s[:, 0:2]
-                adv_all_boxes[idx:idx + num_images, 4] = np.prod(s * pixel_std, 1)
-                adv_all_boxes[idx:idx + num_images, 5] = score
-                adv_all_boxes[idx:idx + num_images, 6] = bbox_id
-                adv_image_paths.extend(joints_data['imgPath'])
-                adv_mean_loss_test += adv_loss.item()
-                adv_mean_acc_test += adv_avg_acc.item()
+                adv_preds, adv_maxvals = COCO_standard_epoch_info.get_predictions(adv_output, joints_data, use_udp=True if self.model_name == "vitpose_small" else False) # You need to link UDP with the part that you create datasets
 
-                idx += num_images
+                adv_epoch_info._accumulate_running_stats(adv_loss, adv_accs, adv_avg_acc, adv_cnt)
+                adv_epoch_info._accumulate_results_for_mAP(adv_preds, adv_maxvals, joints_data)
 
-        cln_mean_loss_test /= self.len_dl_test
-        cln_mean_acc_test /= self.len_dl_test
-        adv_mean_loss_test /= self.len_dl_test
-        adv_mean_acc_test /= self.len_dl_test
+
+        cln_mean_loss_test = cln_epoch_info.running_loss / self.len_dl_test
+        cln_mean_acc_test = cln_epoch_info.running_acc / self.len_dl_test
+        adv_mean_loss_test = adv_epoch_info.running_loss / self.len_dl_test
+        adv_mean_acc_test = adv_epoch_info.running_acc / self.len_dl_test
         
         print('------', 'CLEAN', '-------')
         for thr in self.pck_thresholds: 
@@ -253,7 +205,7 @@ class TestRobust(object):
         print('\Clean: Loss %f - Accuracy %f' % (cln_mean_loss_test, cln_mean_acc_test))
         print('\nClean AP/AR')
         AP_res = self.ds_test.evaluate( 
-            cln_all_preds[:idx], cln_all_boxes[:idx], cln_image_paths[:idx], res_folder=f'{self.log_path}')
+            cln_epoch_info.all_preds[:cln_epoch_info.idx], cln_epoch_info.all_boxes[:cln_epoch_info.idx], cln_epoch_info.image_paths[:cln_epoch_info.idx], res_folder=f'{self.log_path}')
         print('Clean AP: ', AP_res)
 
         print('------', 'Adv', '-------')
@@ -270,7 +222,7 @@ class TestRobust(object):
         print('\Adv: Loss %f - Accuracy %f' % (adv_mean_loss_test, adv_mean_acc_test))
         print('\nAdv AP/AR')
         AP_res = self.ds_test.evaluate( 
-            adv_all_preds[:idx], adv_all_boxes[:idx], adv_image_paths[:idx], res_folder=f'{self.log_path}')
+            adv_epoch_info.all_preds[:adv_epoch_info.idx], adv_epoch_info.all_boxes[:adv_epoch_info.idx], adv_epoch_info.image_paths[:adv_epoch_info.idx], res_folder=f'{self.log_path}')
         print('Adv AP: ', AP_res)
 
     def run(self):

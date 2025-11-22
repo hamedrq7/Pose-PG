@@ -93,7 +93,7 @@ class COCO_standard_epoch_info:
             post_process=post_process, 
             kernel=kernel, #  if self.ds_train.heatmap_sigma == 2. else 17, # carefull 
             target_type=target_type,
-            use_udp=True,
+            use_udp=use_udp,
         )
         return preds, maxvals        
         
