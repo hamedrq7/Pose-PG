@@ -18,7 +18,8 @@ from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatm
 from training.COCO import COCO_standard_epoch_info
 
 import numpy as np 
-
+import sys 
+from misc.log_utils import Logger
 
 class TestRobust(object):
     """
@@ -92,6 +93,11 @@ class TestRobust(object):
         self.device = get_device(device)
 
         os.makedirs(self.log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting    
+        sys.stdout = Logger("{}/run.log".format(log_path))
+        # sys.stderr = sys.stdout
+        command_line_args = sys.argv
+        command = " ".join(command_line_args)
+        print(f"The command that ran this script: {command}")
 
         self.model = get_model(model_name=model_name, model_c=self.model_c, model_nof_joints=self.model_nof_joints,
             model_bn_momentum=self.model_bn_momentum, device=self.device, pretrained_weight_path=pretrained_weight_path)
@@ -120,7 +126,6 @@ class TestRobust(object):
         adv_per_joint_pck_accs = {x: [] for x in self.pck_thresholds}
         adv_pck_accs = {x: [] for x in self.pck_thresholds}
 
-        num_samples = len(self.ds_test)
 
         cln_epoch_info = COCO_standard_epoch_info(-1, 'cln_test', len(self.ds_test), self.model_nof_joints)
         adv_epoch_info = COCO_standard_epoch_info(-1, 'adv_test', len(self.ds_test), self.model_nof_joints)
