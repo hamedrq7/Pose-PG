@@ -27,13 +27,14 @@ def main(exp_name,
          device=None,
          model_name = 'hrnet',
          image_resolution='(256, 192)',
+         log_path = 'no_log_path_given',
          ):
 
     # Seeds
     set_seed_reproducability(seed)
 
     device = get_device(device)
-
+    exp_name = f'{exp_name}/test_coco'
     print("\nStarting experiment `%s` @ %s\n" % (exp_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
     flip_test_images = not disable_flip_test_images
@@ -60,7 +61,7 @@ def main(exp_name,
         pre_trained_only = True, 
         pretrained_weight_path = pretrained_weight_path,
         model_name=model_name,
-        log_path = f'{exp_name}/test_coco'
+        log_path = os.path.join(log_path, exp_name)
     )
     test.run()
 
@@ -83,6 +84,7 @@ if __name__ == '__main__':
     parser.add_argument("--device", "-d", help="device", type=str, default=None)
     parser.add_argument("--model_name", help="poseresnet or hrnet", type=str, default='hrnet')
     parser.add_argument("--image_resolution", "-r", help="image resolution", type=str, default='(256, 192)')
+    parser.add_argument("--log_path", help="log dir", type=str)
 
     args = parser.parse_args()
 
