@@ -95,6 +95,7 @@ gdown_download('https://drive.google.com/uc?id=18-IwNa6TOGQPE0RqGNjNY1cJOfNC7MXj
 gdown_download('https://drive.google.com/uc?id=13xScmTWqO6Y6m_CjiQ-23ptgX9sC-J9I', './datasets/CrowdPose/annotations/crowdpose_trainval.json')
 gdown_download('https://drive.google.com/uc?id=1b3APtKpc43dx_5FxizbS-EWGvd-zl7Lb', './datasets/CrowdPose/annotations/crowdpose_train.json')
 gdown_download('https://drive.google.com/uc?id=1FUzRj-dPbL1OyBwcIX2BgFPEaY5Yrz7S', './datasets/CrowdPose/annotations/crowdpose_test.json')
+gdown_download('https://drive.google.com/uc?id=13KU2xifSerWCTrJHfbCxoD_BD3zVxiOl', './datasets/CrowdPose/annotations/det_for_crowd_test_0.1_0.5.json')
 
 ########################################  Model Weights  ########################################
 # standard resnet50

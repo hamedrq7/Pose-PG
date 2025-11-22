@@ -41,8 +41,10 @@ def main(exp_name,
 
     print("\nLoading validation datasets...")
     from misc.general_utils import get_crowdpose_loaders
+    # ds_val = get_crowdpose_loaders(image_resolution=image_resolution, model_name=model_name,
+    #                             phase="val", test_mode=False) # test_mode should not be false here
     ds_val = get_crowdpose_loaders(image_resolution=image_resolution, model_name=model_name,
-                                phase="val", test_mode=False) # test_mode should not be false here
+                                phase="test", test_mode=True) 
 
     reindexing = None
     if not disable_reindexing: 
