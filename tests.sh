@@ -14,4 +14,4 @@
 # python scripts/test_coco.py --model_c 50 --model_nof_joints 17 --log_path '../exps/st_poseresnet' --pretrained_weight_path '../exps/UsingMyCustomDataset_AndOtherSetting_ST_R50_Sigma2/20251031_1656/checkpoint_best_mAP.pth' --model_name 'poseresnet' --exp_name 'testcoco - detector bboxes' --num_workers 8 
 # python scripts/test_coco.py --model_c 50 --model_nof_joints 17 --log_path '../exps/fgsmtraining_poseresnet' --pretrained_weight_path '../exps/AdvTraining_FAST_FGSM_RS_MIX_eps4_stepsize_2/20251109_1807/checkpoint_cln_best_mAP.pth' --model_name 'poseresnet' --exp_name 'testcoco - detector bboxes' --num_workers 8 
 
-python scripts/test_coco_robustness.py --log_path '../exps/vitpose_small' --pretrained_weight_path './downloads/vitpose_small.pth' --model_name 'vitpose_small' --exp_name 'testpgd - val with gt boxes' --num_workers 8 
+# python scripts/test_coco_robustness.py --log_path '../exps/vitpose_small' --pretrained_weight_path './downloads/vitpose_small.pth' --model_name 'vitpose_small' --exp_name 'testpgd - val with gt boxes' --num_workers 8 

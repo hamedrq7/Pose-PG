@@ -11,3 +11,5 @@ ffmpeg-python>=0.2.0
 pycocotools
 timm==0.4.9 
 einops
+geotorch
+torchdiffeq
