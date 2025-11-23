@@ -19,4 +19,4 @@
 # python scripts/train_coco_adv.py --mix_st --epsilon 0.01568 --step_size 0.00784 --weight_decay 0.0 --num_steps 1 --batch_size 16 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/AdvTraining_FAST_FGSM_RS_MIX_eps4_stepsize_2' --model_name 'poseresnet' --pretrained_weight_path './downloads/madry_adversarial_resnet50_linf4.pt'
 
 
-python scripts/train_sodef.py --num_workers 8 --model_c 50 --model_name poseresnet --pretrained_weight_path '/mnt/data/hossein/Hossein_workspace/nips_cetra/hamed/exps/AdvTraining_FAST_FGSM_RS_MIX_eps4_stepsize_2/20251109_1807/checkpoint_cln_best_mAP.pth' --batch_size 32
+python scripts/train_sodef.py --num_workers 8 --model_c 50 --model_name poseresnet --pretrained_weight_path '/mnt/data/hossein/Hossein_workspace/nips_cetra/hamed/exps/AdvTraining_FAST_FGSM_RS_MIX_eps4_stepsize_2/20251109_1807/checkpoint_cln_best_mAP.pth' --batch_size 32 --log_path '../exps/tryingSODEF'
