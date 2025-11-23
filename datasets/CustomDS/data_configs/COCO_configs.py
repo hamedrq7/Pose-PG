@@ -241,7 +241,7 @@ def get_data_cfg(image_resolution):
 def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
     data_cfg = get_data_cfg(image_resolution)
 
-    if model_name == 'poseresnet' or model_name == 'hrnet':
+    if model_name == 'poseresnet' or model_name == 'hrnet' or model_name == "poseresnet_sodef":
         udp = False
     elif model_name == 'vitpose_small':
         udp = True 
