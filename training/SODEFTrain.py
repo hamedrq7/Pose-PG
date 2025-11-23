@@ -247,7 +247,8 @@ class SODEFTrain(Train):
             target_weight = target_weight.to(self.device)
             
             phase2optim.zero_grad()
-            feats = self.model.phase2_forward(image)
+            feats = self.model.phase2_forward(image).detach()
+            feats.requires_grad_(True)
 
             regu1, regu2  = self.df_dz_regularizer(self.model.odefunc, feats, time_df, numm, self.device, exponent, trans, exponent_off, transoffdig)
             regu1 = regu1.mean() # eq 4
