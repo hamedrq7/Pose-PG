@@ -5,6 +5,7 @@ import numpy as np
 from models_.poseresnet import PoseResNet
 from models_.hrnet import HRNet
 from models_.vitpose import VitPose
+from models_.poseresnet_sodef import PoseResNet_SODEF
 from misc.checkpoint import load_checkpoint
 from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 
@@ -173,6 +174,9 @@ def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, 
                         bn_momentum=model_bn_momentum).to(device)
     elif model_name == "vitpose_small":
         model = VitPose()
+    elif model_name == "poseresnet_sodef": 
+        model = PoseResNet_SODEF(resnet_size=model_c, nof_joints=model_nof_joints, 
+                        bn_momentum=model_bn_momentum).to(device)
     if not pretrained_weight_path is None:
         model = load_pretrained(model, pretrained_weight_path, device=device)
     
