@@ -89,7 +89,8 @@ class TestRobust(object):
         self.epoch = 0
         self.log_path = log_path
         self.pck_thresholds = pck_thresholds
-
+        self.model_name = model_name
+        
         self.device = get_device(device)
 
         os.makedirs(self.log_path, 0o755, exist_ok=True)  # exist_ok=False to avoid overwriting    
