@@ -135,7 +135,7 @@ class SODEFTrain(Train):
         self.reg1_all = []
         self.reg2_all = []
         self.reg3_all = []
-        for ep in range(0, 1):
+        for ep in range(0, 0):
             self._phase2(ep)
         
         self._phase3_prep()
