@@ -119,7 +119,7 @@ class PoseResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x, return_feats=False):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -130,10 +130,12 @@ class PoseResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        x = self.deconv_layers(x)
-        x = self.final_layer(x)
+        feats = self.deconv_layers(x)
+        out = self.final_layer(feats)
 
-        return x
+        if return_feats:
+            return feats, out
+        return out
 
 
 

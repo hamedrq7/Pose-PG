@@ -14,6 +14,27 @@ import datasets.CustomDS.data_configs.CrowdPose_configs as CrowdPoseConfigs
 from misc.general_utils import set_seed_reproducability, get_device
 from datasets.CustomDS.CrowdPoseDataset import TopDownCrowdPoseDataset
 
+"""
+
+
+
+
+
+The flip_image process in testing messes up the re-indexing 
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 def main(exp_name,
          batch_size=1,
          num_workers=4,

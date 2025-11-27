@@ -168,6 +168,21 @@ class SODEFTrain(Train):
 
         print('\nTraining ended @ %s' % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
+    def diag_jacobian(odefunc, z, t, device, exponent, trans):
+        # z: (1, D) or any shape you want (flatten first if needed)
+
+        v = torch.randn_like(z)        # random vector
+        v = v / (v.norm() + 1e-8)
+
+        f = odefunc(t, z)              # forward
+        Jv = torch.autograd.grad(f, z, v, create_graph=True)[0]   # Jv product
+
+        # diag(J) ≈ v * Jv (elementwise)
+        diagJ = v * Jv                 
+        
+        regu_diag = torch.exp(exponent * (diagJ + trans)).mean()
+        return regu_diag
+
     def df_dz_regularizer(self, odefunc, z, time_df, numm, device, exponent, trans, exponent_off, transoffdig):
         regu_diag = 0.
         regu_offdiag = 0.0
