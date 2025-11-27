@@ -29,245 +29,6 @@ from misc.general_utils import NormalizeByChannelMeanStd, set_seed_reproducabili
 from misc.log_utils import make_dir
 import cv2 
 
-mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
-std  = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
-
-
-def get_joints(out, X, nof=17, res = (256, 192)): 
-    boxes = np.asarray([0, 0, X.shape[2], X.shape[1]], dtype=float)
-    # [x1, y1, x2, y2] 
-    # print(boxes)
-    
-    # print(boxes.shape) # [4]
-    
-    pts = np.empty((out.shape[0], 3), dtype=np.float32)
-    # [17, 3]
-    # print(pts.shape)
-
-    for j, joint in enumerate(out):
-        pt = np.unravel_index(np.argmax(joint), (res[0] // 4, res[1] // 4))
-        # print(pt) # (x, y)
-        # print(joint.shape) # [target_h, target_w] 
-        # 0: pt_y / (height // 4) * (bb_y2 - bb_y1) + bb_y1
-        # 1: pt_x / (width // 4) * (bb_x2 - bb_x1) + bb_x1
-        # 2: confidences
-        pts[j, 0] = pt[0] * 1. / (res[0] // 4) * (boxes[3] - boxes[1]) + boxes[1]
-        pts[j, 1] = pt[1] * 1. / (res[1] // 4) * (boxes[2] - boxes[0]) + boxes[0]
-        pts[j, 2] = joint[pt]
-        # print(boxes)
-        # print(pt)
-        # print(pts[j, 0])
-        # print(pts[j, 1])
-        # print(pts[j, 2])
-
-    return pts 
-
-def plot_joints(out, X, name, res, nof):
-    
-    print(out.shape) # [1, nof, target_h, target_w]
-    print(X.shape) # [1, 3, H, W]
-    boxes = np.repeat(
-        np.asarray([[0, 0, X[0].shape[2], X[0].shape[1]]], dtype=float), len(X), axis=0
-    )  # [x1, y1, x2, y2] 
-    
-    heatmaps = np.zeros((len(X), nof, res[0] // 4, res[1] // 4),
-                                dtype=float)
-    print(boxes.shape) # [1, 4]
-    print(heatmaps.shape) # [1, nof, target_h, target_w]
-
-    pts = np.empty((out.shape[0], out.shape[1], 3), dtype=np.float32)
-    # [1, 17, 3]
-
-    # For each human, for each joint: y, x, confidence
-    for i, human in enumerate(out):
-        heatmaps[i] = human # [17, t_h, t_w]
-        for j, joint in enumerate(human):
-            pt = np.unravel_index(np.argmax(joint), (res[0] // 4, res[1] // 4))
-            # print(pt) # (x, y)
-            # print(joint.shape) # [target_h, target_w] 
-            # 0: pt_y / (height // 4) * (bb_y2 - bb_y1) + bb_y1
-            # 1: pt_x / (width // 4) * (bb_x2 - bb_x1) + bb_x1
-            # 2: confidences
-            pts[i, j, 0] = pt[0] * 1. / (res[0] // 4) * (boxes[i][3] - boxes[i][1]) + boxes[i][1]
-            pts[i, j, 1] = pt[1] * 1. / (res[1] // 4) * (boxes[i][2] - boxes[i][0]) + boxes[i][0]
-            pts[i, j, 2] = joint[pt]
-            # print(boxes[i])
-            # print(pt)
-            # print(pts[i, j, 0])
-            # print(pts[i, j, 1])
-            # print(pts[i, j, 2])
-            
-    pts = np.expand_dims(pts, axis=1)
-    res = list()
-    if False: # self.return_heatmaps:
-        res.append(heatmaps)
-    if False: # self.return_bounding_boxes:
-        res.append(boxes)
-    res.append(pts)
-
-    joints = None
-    if len(res) > 1:
-        joints = res
-    else:
-        joints = res[0]
-
-    ## probmalatic:
-    joints=joints[0]
-
-    fig = plt.figure(figsize=(90/2.54, 30/2.54))
-    ax = fig.add_subplot(131)
-    # ax.imshow((X[0]*std+mean).transpose(1, 2, 0))
-    ax.imshow((X[0]).transpose(1, 2, 0))
-    ax = fig.add_subplot(132)
-    # ax.imshow((X[0]*std+mean).transpose(1, 2, 0))
-    # ax.imshow((X[0]).transpose(1, 2, 0))
-    ax.imshow(np.ones_like(X[0]).transpose(1, 2, 0))    
-
-    bones = joints_dict()["coco"]["skeleton"]
-    # bones = joints_dict()["mpii"]["skeleton"]
-
-    for bone in bones:
-        xS = [joints[:,bone[0],1], joints[:,bone[1],1]]
-        yS = [joints[:,bone[0],0], joints[:,bone[1],0]]
-        ax.plot(xS, yS, linewidth=3, c=(0,0.3,0.7))
-    ax.scatter(joints[:,:,1],joints[:,:,0], s=20, c='r')
-
-    # for heatmap
-    ax = fig.add_subplot(133)
-    ax.imshow(heatmaps[0].sum(0))
-
-    plt.savefig(f'{name}.png')
-    plt.clf()
-
-
-def load_model(model_name, model_c, model_nof_joints, model_bn_momentum, pretrained_weight_path, device): 
-    if model_name == 'hrnet':
-        model = HRNet(c=model_c, nof_joints=model_nof_joints,
-                        bn_momentum=model_bn_momentum).to(device)
-    elif model_name == 'poseresnet':
-        model = PoseResNet(resnet_size=model_c, nof_joints=model_nof_joints, bn_momentum=model_bn_momentum).to(device)
-    else:
-        print('invalid model name')
-
-    if pretrained_weight_path is not None:
-        missing_keys, unexpected_keys = model.load_state_dict(
-            torch.load(pretrained_weight_path, map_location=device),
-            strict=False  # strict=False is required to load models pre-trained on imagenet
-        )
-        print('Pre-trained weights loaded.')
-        if len(missing_keys) > 0 or len(unexpected_keys) > 0:
-            print('Pre-trained weights missing keys:', missing_keys)
-            print('Pre-trained weights unexpected keys:', unexpected_keys)
-    return model
-
-def get_and_report(model, ds, loss_fn, X, y, y_targeted, joints_data, num_samples, model_nof_joints, res=(256, 192), name='noname'):
-    all_preds = np.zeros((num_samples, model_nof_joints, 3), dtype=float)
-    all_boxes = np.zeros((num_samples, 7), dtype=float)
-    image_paths = []
-
-    c = joints_data['center'].numpy()
-    s = joints_data['scale'].numpy()
-    score = joints_data['score'].numpy()
-    pixel_std = 200  # ToDo Parametrize this
-    bbox_id = None if not 'bbox_id' in joints_data.keys() else joints_data['bbox_id'].numpy()
-
-    model.eval()
-
-    output = model(X)
-    loss = loss_fn(output, y, y_targeted)
-    accs, avg_acc, cnt = pose_pck_accuracy(output.detach().cpu().numpy(), 
-                                        y.detach().cpu().numpy(), 
-                                        mask=y_targeted.detach().cpu().numpy().squeeze(-1) > 0,
-                                        thr=0.05)
-    
-    preds, maxvals = keypoints_from_heatmaps(
-        heatmaps=output.detach().cpu().numpy(),
-        center=c, 
-        scale=s,
-        post_process="default", 
-        kernel=11, # if ds.heatmap_sigma == 2. else 17, # carefull 
-        target_type="GaussianHeatmap",
-    ) 
-    
-    all_preds[:, :, 0:2] = preds[:, :, 0:2] # .detach().cpu().numpy()
-    all_preds[:, :, 2:3] = maxvals # .detach().cpu().numpy()
-    all_boxes[:, 0:2] = c[:, 0:2]
-    all_boxes[:, 2:4] = s[:, 0:2]
-    all_boxes[:, 4] = np.prod(s * pixel_std, 1)
-    all_boxes[:, 5] = score
-    all_boxes[:, 6] = bbox_id
-    image_paths.extend(joints_data['imgPath'])
-
-    # all_APs, mAP = ds.evaluate(
-    #     all_preds[:num_samples], all_boxes[:num_samples], image_paths[:num_samples], res_folder='./')
-    mAP = -1 
-
-    return {
-        'pck_acc': avg_acc.item(),
-        'loss': loss.item(),
-        'mAP': mAP,
-        'preds': preds, 
-        'maxvals': maxvals,
-        'heatmaps': output.detach().cpu().numpy()
-    }
-    ### Visualization
-
-    plot_joints(output[0].detach().cpu().numpy()[None, :, :, :], X[0].detach().cpu().numpy()[None, :, :, :], f'{name}_1', (256, 192), model_nof_joints)
-    # plot_joints(output[1].detach().cpu().numpy()[None, :, :, :], X[1].detach().cpu().numpy()[None, :, :, :], f'{name}_2', (256, 192), model_nof_joints)
-
-def bchw2bhwc(x):
-    if isinstance(x, np.ndarray):
-        pass
-    else:
-        raise
-
-    if x.ndim == 3:
-        return np.moveaxis(x, 0, 2)
-    if x.ndim == 4:
-        return np.moveaxis(x, 1, 3)
-
-
-def bhwc2bchw(x):
-    if isinstance(x, np.ndarray):
-        pass
-    else:
-        raise
-
-    if x.ndim == 3:
-        return np.moveaxis(x, 2, 0)
-    if x.ndim == 4:
-        return np.moveaxis(x, 3, 1)
-
-
-def tensor2npimg(tensor, tr=True):
-    if not tr:
-        return bchw2bhwc(tensor[0].detach().cpu().numpy())
-    else:
-        return bchw2bhwc(tensor[0].detach().cpu().numpy()*std+mean)
-
-def _show_images(img, advimg, enhance=127):
-    np_img = tensor2npimg(img, False)
-    np_advimg = tensor2npimg(advimg, False)
-    np_perturb = np_advimg - np_img
-    
-    plt.figure(figsize=(10, 5))
-    plt.subplot(1, 3, 1)
-    plt.imshow(np_img)
-    plt.axis("off")
-    plt.title("original image")
-
-    plt.subplot(1, 3, 2)
-    plt.imshow(np_perturb * enhance)
-    plt.axis("off")
-    plt.title("the perturbation")
-    
-    plt.subplot(1, 3, 3)
-    plt.imshow(np_advimg)
-    plt.axis("off")
-    plt.title("perturbed image")
-    plt.savefig('pgd')
-    plt.clf()
-
 def main(
          pretrained_weight_path=None,
          model_c=48,
@@ -292,12 +53,12 @@ def main(
     ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
                                 phase="val", test_mode=False)
     
-    batch_size = 100
+    batch_size = 10
     dl = DataLoader(ds_val, batch_size=batch_size, num_workers=2)
 
     # Load model
     from misc.general_utils import get_model
-    model = get_model(model_name, model_c, model_nof_joints, model_bn_momentum, pretrained_weight_path, device)
+    model = get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, pretrained_weight_path)
     
     data_iter = iter(dl)
     image, target, target_weight, joints_data = next(data_iter)
@@ -308,37 +69,192 @@ def main(
     
     feats, output = model(image, return_feats=True)
 
+    feats = feats.cpu().detach().numpy()
+    output = output.cpu().detach().numpy()
+
+    # import numpy as np
+    # from sklearn.manifold import TSNE
+    # import matplotlib.pyplot as plt
+
+    # # feats: [N, C, H, W]
+    # N, C, H, W = feats.shape
+
+    # # 1. reshape to (N*H*W, C)
+    # samples = feats.reshape(N, C, H*W).transpose(0, 2, 1).reshape(N*H*W, C)
+
+    # # 2. run t-SNE
+    # tsne = TSNE(n_components=2, perplexity=30, learning_rate='auto', verbose=1, init='pca')
+    # emb = tsne.fit_transform(samples)   # shape: (N*H*W, 2)
+
+    # # 3. simple 2D scatter
+    # plt.figure(figsize=(6, 6))
+    # plt.scatter(emb[:, 0], emb[:, 1], s=2, alpha=0.6)
+    # plt.title("t-SNE of feats reshaped to (N*H*W, C)")
+    # plt.xlabel("Dim 1")
+    # plt.ylabel("Dim 2")
+    # plt.savefig("tsne_feats_all.png", dpi=300, bbox_inches='tight')
+    # plt.close()
+
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # target__ shape: [17, H, W]
+    target__ = target.cpu().detach().numpy()[0]
+    # Sum over the first axis → shape becomes [H, W]
+    heat = target__.sum(axis=0)
+
+    plt.figure(figsize=(6, 6))
+    plt.imshow(heat, cmap='hot')
+    plt.colorbar()
+    plt.title("Summed target heatmap")
+    plt.savefig("target_sum_heatmap.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # feats: [N, C, H, W]
+
+    x = feats[0]        # [C, H, W]
+    C, H, W = x.shape
+
+    # Average over channels → [H, W]
+    avg_map = x.mean(axis=0)
+
+    # Plot heatmap
+    plt.figure(figsize=(6, 6))
+    plt.imshow(avg_map, cmap='viridis')
+    plt.colorbar()
+    plt.title("Channel-averaged heatmap")
+    plt.savefig("avg_channels_heatmap.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
     import numpy as np
     from sklearn.manifold import TSNE
     import matplotlib.pyplot as plt
 
-    # feats has shape [N, C, H, W]
+    # feats: [N, C, H, W]
 
-    # 1. Take the first element
-    x = feats[0]     # shape: [C, H, W]
-
+    # take first element
+    x = feats[0]    # [C, H, W]
     C, H, W = x.shape
 
-    # 2. Reshape to (H*W, C)
-    samples = x.reshape(C, H * W).T   # shape: (H*W, C)
+    # flatten to (H*W, C)
+    samples = x.reshape(C, H*W).T
 
-    # 3. Run t-SNE
-    tsne = TSNE(n_components=2, perplexity=30, learning_rate='auto', init='pca')
-    emb = tsne.fit_transform(samples)   # shape: (H*W, 2)
+    # run t-SNE with 1 dimension
+    tsne = TSNE(n_components=1, perplexity=30, learning_rate='auto', init='pca')
+    emb1 = tsne.fit_transform(samples)     # shape: (H*W, 1)
 
-    # 4. Plot and SAVE the figure
+    # reshape back to (H, W)
+    tsne_map = emb1.reshape(H, W)
+
+    # plot as heatmap
     plt.figure(figsize=(6, 6))
-    plt.scatter(emb[:, 0], emb[:, 1], s=5, alpha=0.7)
-    plt.title("t-SNE of feats[0] pixels")
-    plt.xlabel("Dim 1")
-    plt.ylabel("Dim 2")
+    plt.imshow(tsne_map, cmap='viridis')
+    plt.colorbar()
+    plt.title("1D t-SNE heatmap of feats[0]")
+    plt.savefig("tsne_1d_heatmap.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    ########################################## Load some fron ImageNet 
+    imagenet_root = 'imagenet'
+    # ----------- DATA -----------
+    from torchvision import datasets, transforms, models
+    import torchvision 
+    
+    val_transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(256, 192),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        ),
+    ])
 
-    plt.savefig("tsne_feats0.png", dpi=300, bbox_inches='tight')
+    ds = torchvision.datasets.ImageNet(f'{imagenet_root}', split='val', transform=val_transform)
+
+    dl = DataLoader(
+        ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=True
+    )
+
+    data_iter = iter(dl)
+    image, label = next(data_iter)
+    image = image.to(device)
+    label = label.to(device)
+
+    feats, output = model(image, return_feats=True)
+    feats = feats.cpu().detach().numpy()
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # feats: [N, C, H, W]
+    x = feats[0]        # [C, H, W]
+    C, H, W = x.shape
+
+    # Average over channels → [H, W]
+    avg_map = x.mean(axis=0)
+
+    # Plot heatmap
+    plt.figure(figsize=(6, 6))
+    plt.imshow(avg_map, cmap='viridis')
+    plt.colorbar()
+    plt.title("ImageNet Channel-averaged heatmap")
+    plt.savefig("ImageNet avg_channels_heatmap.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    import numpy as np
+    from sklearn.manifold import TSNE
+    import matplotlib.pyplot as plt
+
+    # feats: [N, C, H, W]
+
+    # take first element
+    x = feats[0]    # [C, H, W]
+    C, H, W = x.shape
+
+    # flatten to (H*W, C)
+    samples = x.reshape(C, H*W).T
+
+    # run t-SNE with 1 dimension
+    tsne = TSNE(n_components=1, perplexity=30, learning_rate='auto', init='pca')
+    emb1 = tsne.fit_transform(samples)     # shape: (H*W, 1)
+
+    # reshape back to (H, W)
+    tsne_map = emb1.reshape(H, W)
+
+    # plot as heatmap
+    plt.figure(figsize=(6, 6))
+    plt.imshow(tsne_map, cmap='viridis')
+    plt.colorbar()
+    plt.title("ImageNet 1D t-SNE heatmap of feats[0]")
+    plt.savefig("ImageNet tsne_1d_heatmap.png", dpi=300, bbox_inches='tight')
     plt.close()
 
-        
-        
-        
+    import torchvision.transforms.functional as F
+    img_vis = F.to_pil_image(
+        image[0].cpu().detach() * torch.tensor([0.229, 0.224, 0.225]).view(3,1,1) +
+            torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)
+    )
+
+    # Plot
+    plt.imshow(img_vis)
+    plt.title(f"Class: {ds.classes[label]}")
+    plt.axis("off")
+    plt.show()
+
+    # Save
+    img_vis.save("sample_imagenet.png")
+    print("Saved to sample_imagenet.png")
+
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--pretrained_weight_path", "-p",
