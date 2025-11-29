@@ -211,7 +211,7 @@ class TrainAuxilary(object):
         # save_results(os.path.join(self.log_path, 'results.npz'), self.acc_train_list, self.loss_train_list, self.mAP_train_list, self.APs_train_list, self.acc_val_list, self.loss_val_list, self.mAP_val_list, self.APs_val_list)
         save_results_modular(
             os.path.join(self.log_path, 'results.npz'),
-            self._get_results_dict(self)
+            self._get_results_dict()
         )
         save_checkpoint(path=os.path.join(self.log_path, 'checkpoint_last.pth'), epoch=self.epoch + 1, model=self.model,
                         optimizer=self.optim, params=self.parameters)
