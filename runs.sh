@@ -23,7 +23,7 @@
 
 
 # COCO_ImageNet OOD 
-python scripts/train_coco_imagenet_ood.py --log_path '../exps/testing/COCO-ImageNet-OOD-aux_weight-0.001+1warmup' --epochs 3 --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
-python scripts/train_coco_imagenet_ood.py --log_path '../exps/testing/COCO-ImageNet-OOD-aux_weight-0.01+1warmup' --epochs 3 --aux_loss_weight 0.01 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
-python scripts/train_coco_imagenet_ood.py --log_path '../exps/testing/COCO-ImageNet-OOD-aux_weight-0.1+1warmup' --epochs 3 --aux_loss_weight 0.1 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
+python scripts/train_coco_imagenet_ood.py --log_path '../exps/COCO-ImageNet-OOD-aux_weight-0.001+1warmup' --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
+# python scripts/train_coco_imagenet_ood.py --log_path '../exps/testing/COCO-ImageNet-OOD-aux_weight-0.01+1warmup' --epochs 3 --aux_loss_weight 0.01 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
+# python scripts/train_coco_imagenet_ood.py --log_path '../exps/testing/COCO-ImageNet-OOD-aux_weight-0.1+1warmup' --epochs 3 --aux_loss_weight 0.1 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
 
