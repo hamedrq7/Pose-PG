@@ -23,66 +23,72 @@ def get_imagenet_loaders(image_resolution, phase: str, no_normalization: bool = 
     if phase == "val": 
         print('ImageNet Validation set, only animals...')
         
-        val_transform = transforms.Compose([
-            transforms.Resize(H),
-            transforms.CenterCrop((H, W)),
+        transform_list = [
+            transforms.Resize((H, W)),   # deterministic resize to model input size
             transforms.ToTensor(),
-            transforms.Normalize(
+        ]
+        
+        if not no_normalization:
+            transform_list.append(transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]
-            ),
-        ])
+            ))
 
         val_ds = configs.FilteredImageNet(
             root=configs.root,
             split="val",
             wnid_file=configs.animal_winds_path,
-            transform=val_transform
+            transform=transforms.Compose(transform_list)
         )
 
         print(len(val_ds))       # number of animal images
         print(len(val_ds.classes))   # should be 398
-
+        return val_ds
+    
     elif phase == "train": 
         print('ImageNet Training set, only animals...')
         
-        val_transform = transforms.Compose([
-            transforms.Resize(H),
-            transforms.CenterCrop((H, W)),
+        transform_list = [
+            # 1. Crop a larger area to allow safe rotation
+            transforms.RandomResizedCrop(
+                (int(H * 1.25), int(W * 1.25)),               # larger than final size
+                scale=(0.8, 1.0),
+                ratio=(0.75, 1.33)
+            ),
             transforms.RandomHorizontalFlip(p=0.5),
+            # 2. Rotate - SAFE because image is larger than final crop
+            transforms.RandomRotation(
+                degrees=45,
+                # fill=128                  # neutral padding
+            ),
+            # 3. Now crop to final COCO size (padding-free)
+            transforms.CenterCrop((H, W)),
+            # 4. Mild scale & translation (affine) like COCO
+            transforms.RandomAffine(
+                degrees=0,
+                scale=(0.85, 1.15),
+                translate=(0.05, 0.05),
+                # fill=128
+            ),
             transforms.ToTensor(),
-            transforms.Normalize(
+        ]
+        if not no_normalization: 
+            transform_list.append(transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]
-            ),
-        ])
+            ))
 
-        val_ds = configs.FilteredImageNet(
+        train_ds = configs.FilteredImageNet(
             root=configs.root,
-            split="val",
+            split="train",
             wnid_file=configs.animal_winds_path,
-            transform=val_transform
+            transform=transforms.Compose(transform_list)
         )
 
-        print(len(val_ds))       # number of animal images
-        print(len(val_ds.classes))   # should be 398
+        print(len(train_ds))       # number of animal images
+        print(len(train_ds.classes))   # should be 398
 
-    ###### Train
-    train_pipeline = [LoadImageFromFile()]
-    train_pipeline.append(TopDownRandomFlip(flip_prob=0.5))
-    train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
-    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35))
-    train_pipeline.append(TopDownAffine(use_udp=udp))
-
-    ###### Val
-    val_pipeline = [LoadImageFromFile()]
-    val_pipeline.append(TopDownAffine(use_udp=udp))
-    val_pipeline.append(ToTensor())
-    if not no_normalization:
-        val_pipeline.append(NormalizeTensor(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-            ))
+        return train_ds
 
 
 

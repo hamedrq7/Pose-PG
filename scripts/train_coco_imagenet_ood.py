@@ -64,14 +64,14 @@ def main(exp_name,
     print("\nLoading train and validation datasets...")
 
     # load train and val datasets
-    from misc.general_utils import get_coco_loaders
+    from misc.general_utils import get_coco_loaders, get_imagenet_loaders
     pose_ds_train = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
                                 phase="train", test_mode=False)
     pose_ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
                                 phase="val", test_mode=False) # test_mode should not be false here
 
-    aux_ds_train = None
-    aux_ds_val = None
+    aux_ds_train = get_imagenet_loaders(image_resolution=image_resolution, phase="train")
+    aux_ds_val = get_imagenet_loaders(image_resolution=image_resolution, phase="val")
     
     train = COCO_ImageNet_OOD(
         exp_name=exp_name,
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     parser.add_argument("--lr_decay_gamma", help="learning rate decay gamma", type=float, default=0.1)
     parser.add_argument("--optimizer", "-o", help="optimizer name. Currently, only `SGD` and `Adam` are supported.",
                         type=str, default='Adam')
-    parser.add_argument("--weight_decay", help="weight decay", type=float, default=0.0001)
+    parser.add_argument("--weight_decay", help="weight decay", type=float, default=0.0) # 0.0001
     parser.add_argument("--momentum", "-m", help="momentum", type=float, default=0.9)
     parser.add_argument("--nesterov", help="enable nesterov", action="store_true")
     parser.add_argument("--pretrained_weight_path", "-p",
