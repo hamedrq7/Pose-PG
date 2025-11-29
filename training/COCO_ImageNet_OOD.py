@@ -9,6 +9,8 @@ from training.TrainAuxilary import TrainAuxilary
 from datasets.CustomDS.eval_utils import pose_pck_accuracy, keypoints_from_heatmaps
 from training.COCO import COCO_standard_epoch_info
 from torch.utils.data.dataloader import DataLoader
+import sklearn
+from sklearn.metrics import confusion_matrix
 
 def inf_generator(iterable):
     """Allows training with DataLoaders in a single infinite loop:
@@ -216,9 +218,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
     def _print_conf_mat(self, pred_class, ood_label): 
         pred_np = pred_class.cpu().numpy()
         label_np = ood_label.cpu().numpy()
-
-        from sklearn.metrics import confusion_matrix
-
+        
         cm = confusion_matrix(label_np, pred_np)
         print(cm)
 
