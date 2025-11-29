@@ -138,7 +138,7 @@ class PoseResNetOOD(nn.Module):
 
         feats = self.deconv_layers(x)
         pose_out = self.final_layer(feats)
-        ood_out = self.ood_head(feats)
+        ood_out = self.ood_head(feats).squeeze()
 
         if return_feats:
             return feats, ood_out, pose_out
