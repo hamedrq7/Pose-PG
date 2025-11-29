@@ -70,7 +70,7 @@ def main(exp_name,
     pose_ds_val = get_coco_loaders(image_resolution=image_resolution, model_name=model_name,
                                 phase="val", test_mode=False) # test_mode should not be false here
 
-    aux_ds_train = get_imagenet_loaders(image_resolution=image_resolution, phase="train")
+    aux_ds_train = get_imagenet_loaders(image_resolution=image_resolution, phase="val") # For testing the code
     aux_ds_val = get_imagenet_loaders(image_resolution=image_resolution, phase="val")
     
     train = COCO_ImageNet_OOD(
