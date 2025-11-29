@@ -99,6 +99,8 @@ gdown_download('https://drive.google.com/uc?id=13KU2xifSerWCTrJHfbCxoD_BD3zVxiOl
 
 ########################################  ImageNet  ########################################
 import datasets.CustomDS.data_configs.ImageNet_configs as imagenet_configs
+os.makedirs(f"{imagenet_configs.root}", exist_ok=True)
+
 if not os.path.exists(f'{imagenet_configs.root}/val'):
     imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
     imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
