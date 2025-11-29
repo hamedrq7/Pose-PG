@@ -244,7 +244,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
                 epoch_info._accumulate_results_for_mAP(preds, maxvals, joints_data)
                 epoch_info._accumulate_running_stats(poes_loss, accs, avg_acc, cnt)
 
-                all_coco_ood_outputs.append(coco_ood_output.cpu().detach())
+                all_coco_ood_outputs.append(coco_ood_output.detach())
 
                 if step > 1: 
                     break 
@@ -252,7 +252,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             for step, (image, _) in enumerate(tqdm(self.aux_dl_val, desc='ImageNet Validating')): 
                 image = image.to(self.device)
                 imagenet_ood_output, _ = self.model(image)
-                all_imagenet_ood_outputs.append(imagenet_ood_output.cpu().detach())
+                all_imagenet_ood_outputs.append(imagenet_ood_output.detach())
 
                 if step > 1 :
                     break 
@@ -261,7 +261,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             all_coco_ood_outputs = torch.cat(all_coco_ood_outputs)
             all_imagenet_ood_outputs = torch.cat(all_imagenet_ood_outputs)
             print(all_coco_ood_outputs.shape)
-            
+
             domain_id   = torch.ones(all_coco_ood_outputs.shape[0], dtype=torch.float32, device=self.device)
             domain_ood  = torch.zeros(all_imagenet_ood_outputs.shape[0], dtype=torch.float32, device=self.device)
 
