@@ -213,6 +213,15 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             self.summary_writer.add_scalar('train_ood_acc', self.ood_acc_train_list[-1],
                                             global_step=self.epoch)
 
+    def _print_conf_mat(self, pred_class, ood_label): 
+        pred_np = pred_class.cpu().numpy()
+        label_np = ood_label.cpu().numpy()
+
+        from sklearn.metrics import confusion_matrix
+
+        cm = confusion_matrix(label_np, pred_np)
+        print(cm)
+
     def _val(self):
         epoch_info = COCO_standard_epoch_info(-1, 'val', len(self.pose_ds_val), self.model_nof_joints)
 
@@ -272,6 +281,8 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             pred = (prob >= 0.5).float()
             ood_corrects = (pred == ood_label).sum().item()
             num_ood_samples = ood_label.shape[0]
+
+            self._print_conf_mat(pred, ood_label)
 
         self.aux_loss_val_list.append(ood_loss)
         self.ood_acc_val_list.append(ood_corrects / num_ood_samples)
