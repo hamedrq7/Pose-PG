@@ -13,4 +13,4 @@ timm==0.4.9
 einops
 geotorch
 torchdiffeq
-sklearn
+scikit-learn
