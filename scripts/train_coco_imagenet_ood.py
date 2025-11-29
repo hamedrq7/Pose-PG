@@ -117,7 +117,7 @@ if __name__ == '__main__':
                         type=str, default=str(datetime.now().strftime("%Y%m%d_%H%M")))
     parser.add_argument("--epochs", "-e", help="number of epochs", type=int, default=140)
     parser.add_argument("--pose_batch_size", "-b", help="batch size", type=int, default=16)
-    parser.add_argument("--aux_batch_size", "-b", help="batch size", type=int, default=16)
+    parser.add_argument("--aux_batch_size", help="batch size", type=int, default=16)
     parser.add_argument("--num_workers", "-w", help="number of DataLoader workers", type=int, default=4)
     parser.add_argument("--lr", "-l", help="initial learning rate", type=float, default=0.001)
     parser.add_argument("--disable_lr_decay", help="disable learning rate decay", action="store_true")
