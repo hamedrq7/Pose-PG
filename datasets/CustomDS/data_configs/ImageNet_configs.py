@@ -6,6 +6,7 @@ def unzip_imagenet_val():
     import torchvision
 
     ds = torchvision.datasets.ImageNet(f'{root}', split='val',)
+    print(len(ds))
     return (len(ds) == 1281167) 
 
 def unzip_imagenet_train():
@@ -13,6 +14,7 @@ def unzip_imagenet_train():
 
     ds = torchvision.datasets.ImageNet(f'{root}', split='train', )
     
+    print(len(ds))
     return len(ds) == 50000
  
 import json
