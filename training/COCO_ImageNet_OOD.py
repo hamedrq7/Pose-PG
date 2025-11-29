@@ -178,6 +178,9 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             total_running_loss += loss.item()
             num_ood_samples += ood_label.shape[0]
 
+            if step > 1: 
+                break 
+
         self.pose_loss_train_list.append(epoch_info.running_loss / len(self.pose_dl_train))
         self.pose_acc_train_list.append(epoch_info.running_acc / len(self.pose_dl_train))
         self.aux_loss_train_list.append(ood_running_loss / len(self.pose_dl_train))
@@ -186,7 +189,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
 
         # COCO evaluation
         print('\nTrain AP/AR')
-        all_APs, mAP = self.ds_train.evaluate(
+        all_APs, mAP = self.pose_ds_train.evaluate(
             epoch_info.all_preds[:epoch_info.idx], epoch_info.all_boxes[:epoch_info.idx], epoch_info.image_paths[:epoch_info.idx], res_folder=self.log_path)
 
         self.pose_mAP_train_list.append(mAP)
@@ -242,12 +245,18 @@ class COCO_ImageNet_OOD(TrainAuxilary):
                 epoch_info._accumulate_running_stats(poes_loss, accs, avg_acc, cnt)
 
                 all_coco_ood_outputs.append(coco_ood_output.cpu().detach())
-            
+
+                if step > 1: 
+                    break 
+
             for step, (image, _) in enumerate(tqdm(self.aux_dl_val, desc='ImageNet Validating')): 
                 image = image.to(self.device)
                 imagenet_ood_output, _ = self.model(image)
                 all_imagenet_ood_outputs.append(imagenet_ood_output.cpu().detach())
-            
+
+                if step > 1 :
+                    break 
+
             # Process ood outputs
             all_coco_ood_outputs = torch.tensor(all_coco_ood_outputs)
             all_imagenet_ood_outputs = torch.tensor(all_imagenet_ood_outputs)
@@ -272,7 +281,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
 
         # COCO evaluation
         print('\nVal AP/AR')
-        all_APs, mAP = self.ds_val.evaluate(
+        all_APs, mAP = self.pose_ds_val.evaluate(
             epoch_info.all_preds[:epoch_info.idx], epoch_info.all_boxes[:epoch_info.idx], epoch_info.image_paths[:epoch_info.idx], res_folder=self.log_path)
        
         self.pose_mAP_val_list.append(mAP)
