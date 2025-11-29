@@ -105,7 +105,7 @@ imagenet_devkit_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_devkit_
 imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_devkit_t12.tar.gz"
 download_file(imagenet_devkit_url, imagenet_val_path)
 
-if True: # not os.path.exists(f'{imagenet_configs.root}/val'):
+if not os.path.exists(f'{imagenet_configs.root}/val'):
     imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
     imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
     download_file(imagenet_val_url, imagenet_val_path)
@@ -117,17 +117,17 @@ if True: # not os.path.exists(f'{imagenet_configs.root}/val'):
 else:
     print(f'{imagenet_configs.root}/val exits, skipping download and unzip')
 
-# if not os.path.exists(f'{imagenet_configs.root}/train'):
-#     imagenet_train_url = "https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar"
-#     imagenet_train_path = f"{imagenet_configs.root}/ILSVRC2012_img_train.tar"
-#     download_file(imagenet_train_url, imagenet_train_path)
-#     results = imagenet_configs.unzip_imagenet_train()
-#     print('Unzipped ImageNet train, status: ', results )
-#     if results == True: 
-#         print('Deleting zip files')
-#         os.remove(imagenet_train_path)
-# else:
-#     print(f'{imagenet_configs.root}/train exits, skipping download and unzip')
+if not os.path.exists(f'{imagenet_configs.root}/train'):
+    imagenet_train_url = "https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar"
+    imagenet_train_path = f"{imagenet_configs.root}/ILSVRC2012_img_train.tar"
+    download_file(imagenet_train_url, imagenet_train_path)
+    results = imagenet_configs.unzip_imagenet_train()
+    print('Unzipped ImageNet train, status: ', results )
+    if results == True: 
+        print('Deleting zip files')
+        os.remove(imagenet_train_path)
+else:
+    print(f'{imagenet_configs.root}/train exits, skipping download and unzip')
 
 
 ########################################  Model Weights  ########################################
