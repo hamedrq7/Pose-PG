@@ -163,7 +163,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
                 loss = pose_loss + self.aux_loss_weight * ood_loss
             else: 
                 loss = pose_loss
-                
+
             loss.backward()
             self.optim.step()
 
@@ -183,10 +183,10 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             total_running_loss += loss.item()
             num_ood_samples += ood_label.shape[0]
 
-            print('Pose acc', avg_acc)
-            print('Pose Loss', pose_loss.item())
-            print('OOD acc', (pred == ood_label).sum().item()/ood_label.shape[0])
-            print('OOD Loss', ood_loss.item())
+            # print('Pose acc', avg_acc)
+            # print('Pose Loss', pose_loss.item())
+            # print('OOD acc', (pred == ood_label).sum().item()/ood_label.shape[0])
+            # print('OOD Loss', ood_loss.item())
             
             # if step > 1: 
             #     break 
