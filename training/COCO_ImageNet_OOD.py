@@ -260,7 +260,6 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             # Process ood outputs
             all_coco_ood_outputs = torch.cat(all_coco_ood_outputs)
             all_imagenet_ood_outputs = torch.cat(all_imagenet_ood_outputs)
-            print(all_coco_ood_outputs.shape)
 
             domain_id   = torch.ones(all_coco_ood_outputs.shape[0], dtype=torch.float32, device=self.device)
             domain_ood  = torch.zeros(all_imagenet_ood_outputs.shape[0], dtype=torch.float32, device=self.device)

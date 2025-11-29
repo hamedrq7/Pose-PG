@@ -52,8 +52,8 @@ class COCO_standard_epoch_info:
         """
         accumulate running stats, the MSE loss, and avg pck acc
         """
-        self.running_acc += avg_acc # .item()
-        self.running_loss += loss # .item()
+        self.running_acc += avg_acc.item()
+        self.running_loss += loss.item()
 
     @staticmethod
     def get_pck_acc(output, target, target_weight, pck_thr=0.05):
