@@ -283,7 +283,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             num_ood_samples = ood_label.shape[0]
 
             self._print_conf_mat(pred, ood_label)
-
+            exit()
         self.aux_loss_val_list.append(ood_loss)
         self.ood_acc_val_list.append(ood_corrects / num_ood_samples)
         self.pose_loss_val_list.append(epoch_info.running_loss / len(self.pose_dl_val))
