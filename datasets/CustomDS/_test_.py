@@ -2,9 +2,19 @@ import sys
 import os 
 sys.path.insert(1, os.getcwd())
 
-from datasets.CustomDS.AnimalAP10KDataset import AnimalAP10KDataset
-import datasets.CustomDS.data_configs.AP10K_configs as AP10K_configs
 from torch.utils.data import DataLoader
+from misc.general_utils import get_coco_loaders
+
+
+
+pose_ds_val = get_coco_loaders(image_resolution=[256, 192], model_name="poseresnet",
+                            phase="val", test_mode=False) # test_mode should not be false here
+
+train_dl = DataLoader(pose_ds_val, batch_size=1)
+it = iter(train_dl)
+image, target, target_weight, joints_data = next(it)
+print(image.shape)
+exit()
 
 # train_ds = AnimalAP10KDataset(f'{AP10K_configs.AP10K_data_root}/annotations/ap10k-train-split1.json', img_prefix=f'{AP10K_configs.AP10K_data_root}/data/', 
 #                         data_cfg=AP10K_configs.AP10K_data_cfg, pipeline=AP10K_configs.AP10K_train_pipeline, dataset_info=AP10K_configs.AP10K_dataset_info)

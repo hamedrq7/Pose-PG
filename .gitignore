@@ -15,6 +15,7 @@ downloads/
 datasets/COCO
 datasets/coco-C
 datasets/ap-10k
+datasets/imagenet
 no_log_path_given/
 temp/
 eggs/

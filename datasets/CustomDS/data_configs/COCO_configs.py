@@ -241,11 +241,15 @@ def get_data_cfg(image_resolution):
 def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
     data_cfg = get_data_cfg(image_resolution)
 
-    if model_name == 'poseresnet' or model_name == 'hrnet' or model_name == "poseresnet_sodef":
+    # if model_name == 'poseresnet' or model_name == 'hrnet' or model_name == "poseresnet_sodef":
+    #     udp = False
+    # elif model_name == 'vitpose_small':
+    #     udp = True 
+    if model_name == 'vitpose_small':
+        udp = True
+    else:
         udp = False
-    elif model_name == 'vitpose_small':
-        udp = True 
-
+        
     ###### Train
     train_pipeline = [LoadImageFromFile()]
     train_pipeline.append(TopDownRandomFlip(flip_prob=0.5))

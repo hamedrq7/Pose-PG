@@ -203,10 +203,16 @@ from datasets.CustomDS.augmentaions import (
 def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
     data_cfg = get_data_cfg(image_resolution)
 
-    if model_name == "poseresnet" or model_name == 'hrnet':
-        udp = False
-    elif model_name == "vitpose_small":
+    # if model_name == "poseresnet" or model_name == 'hrnet':
+    #     udp = False
+    # elif model_name == "vitpose_small":
+    #     udp = True
+
+    if model_name == 'vitpose_small':
         udp = True
+    else:
+        udp = False
+    
 
     train_pipeline = [LoadImageFromFile()]
     train_pipeline.append(TopDownRandomFlip(flip_prob=0.5))

@@ -6,11 +6,85 @@ from models_.poseresnet import PoseResNet
 from models_.hrnet import HRNet
 from models_.vitpose import VitPose
 from models_.poseresnet_sodef import PoseResNet_SODEF
+from models_.poseresnet_ood import PoseResNetOOD
 from misc.checkpoint import load_checkpoint
 from losses.loss import JointsMSELoss, JointsOHKMMSELoss
 
 from torch.autograd import Variable
 import torch.optim as optim
+
+
+def get_imagenet_loaders(image_resolution, phase: str, no_normalization: bool = False):
+    W, H = image_resolution[1], image_resolution[0]
+    
+    from torchvision import transforms
+    import datasets.CustomDS.data_configs.ImageNet_configs as configs 
+
+    if phase == "val": 
+        print('ImageNet Validation set, only animals...')
+        
+        val_transform = transforms.Compose([
+            transforms.Resize(H),
+            transforms.CenterCrop((H, W)),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            ),
+        ])
+
+        val_ds = configs.FilteredImageNet(
+            root=configs.root,
+            split="val",
+            wnid_file=configs.animal_winds_path,
+            transform=val_transform
+        )
+
+        print(len(val_ds))       # number of animal images
+        print(len(val_ds.classes))   # should be 398
+
+    elif phase == "train": 
+        print('ImageNet Training set, only animals...')
+        
+        val_transform = transforms.Compose([
+            transforms.Resize(H),
+            transforms.CenterCrop((H, W)),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            ),
+        ])
+
+        val_ds = configs.FilteredImageNet(
+            root=configs.root,
+            split="val",
+            wnid_file=configs.animal_winds_path,
+            transform=val_transform
+        )
+
+        print(len(val_ds))       # number of animal images
+        print(len(val_ds.classes))   # should be 398
+
+    ###### Train
+    train_pipeline = [LoadImageFromFile()]
+    train_pipeline.append(TopDownRandomFlip(flip_prob=0.5))
+    train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
+    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35))
+    train_pipeline.append(TopDownAffine(use_udp=udp))
+
+    ###### Val
+    val_pipeline = [LoadImageFromFile()]
+    val_pipeline.append(TopDownAffine(use_udp=udp))
+    val_pipeline.append(ToTensor())
+    if not no_normalization:
+        val_pipeline.append(NormalizeTensor(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+            ))
+
+
 
 def get_coco_loaders(image_resolution, model_name, phase: str, test_mode: bool, no_normalization: bool = False):
     import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
@@ -135,6 +209,8 @@ def get_loss_fn(loss: str, device, use_target_weight=True):
         loss_fn = JointsMSELoss(use_target_weight).to(device)
     elif loss == 'JointsOHKMMSELoss':
         loss_fn = JointsOHKMMSELoss(use_target_weight).to(device)
+    elif loss == 'BCE':
+        loss_fn = nn.BCEWithLogitsLoss()
     else:
         raise NotImplementedError
     return loss_fn
@@ -176,6 +252,9 @@ def get_model(model_name, model_c, model_nof_joints, model_bn_momentum, device, 
         model = VitPose()
     elif model_name == "poseresnet_sodef": 
         model = PoseResNet_SODEF(resnet_size=model_c, nof_joints=model_nof_joints, 
+                        bn_momentum=model_bn_momentum).to(device)
+    elif model_name == "poseresnet_ood":
+        model = PoseResNetOOD(resnet_size=model_c, nof_joints=model_nof_joints, 
                         bn_momentum=model_bn_momentum).to(device)
     if not pretrained_weight_path is None:
         model = load_pretrained(model, pretrained_weight_path, device=device)
