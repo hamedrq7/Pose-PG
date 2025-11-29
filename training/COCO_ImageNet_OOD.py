@@ -159,8 +159,11 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             ood_label = torch.cat([domain_id, domain_ood], dim=0)
             ood_loss = self.aux_loss_fn(ood_out, ood_label)
 
-            loss = pose_loss + self.aux_loss_weight * ood_loss
-
+            if self.epoch >= 1: 
+                loss = pose_loss + self.aux_loss_weight * ood_loss
+            else: 
+                loss = pose_loss
+                
             loss.backward()
             self.optim.step()
 
