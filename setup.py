@@ -99,6 +99,18 @@ gdown_download('https://drive.google.com/uc?id=13KU2xifSerWCTrJHfbCxoD_BD3zVxiOl
 
 ########################################  ImageNet  ########################################
 import datasets.CustomDS.data_configs.ImageNet_configs as imagenet_configs
+if not os.path.exists(f'{imagenet_configs.root}/val'):
+    imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
+    imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
+    download_file(imagenet_val_url, imagenet_val_path)
+    results = imagenet_configs.unzip_imagenet_val()
+    print('Unzipped ImageNet Val, status: ', results)
+    if results == True: 
+        print('Deleting zip files')
+        os.remove(imagenet_val_path)
+else:
+    print(f'{imagenet_configs.root}/val exits, skipping download and unzip')
+
 if not os.path.exists(f'{imagenet_configs.root}/train'):
     imagenet_train_url = "https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar"
     imagenet_train_path = f"{imagenet_configs.root}/ILSVRC2012_img_train.tar"
@@ -111,17 +123,6 @@ if not os.path.exists(f'{imagenet_configs.root}/train'):
 else:
     print(f'{imagenet_configs.root}/train exits, skipping download and unzip')
 
-if not os.path.exists(f'{imagenet_configs.root}/val'):
-    imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
-    imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
-    download_file(imagenet_val_url, imagenet_val_path)
-    results = imagenet_configs.unzip_imagenet_val()
-    print('Unzipped ImageNet Val, status: ', results)
-    if results == True: 
-        print('Deleting zip files')
-        os.remove(imagenet_val_path)
-else:
-    print(f'{imagenet_configs.root}/val exits, skipping download and unzip')
 
 
 imagenet_devkit_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_devkit_t12.tar.gz"
