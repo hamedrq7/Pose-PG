@@ -23,5 +23,4 @@
 
 
 # COCO_ImageNet OOD 
-# python scripts/train_coco_imagenet_ood.py --aux_loss_weight 0.1 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 4 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/COCO-ImageNet-OOD-aux_weight-0.1' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
-python scripts/train_coco.py --batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/delete_later' --model_name poseresnet --pretrained_weight_path './downloads/resnet50_l2_eps0.05.ckpt'
+python scripts/train_coco_imagenet_ood.py --aux_loss_weight 0.1 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 4 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/COCO-ImageNet-OOD-aux_weight-0.1' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
