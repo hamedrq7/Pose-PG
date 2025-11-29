@@ -70,6 +70,12 @@ def get_imagenet_loaders(image_resolution, phase: str, no_normalization: bool = 
                 translate=(0.05, 0.05),
                 # fill=128
             ),
+
+            transforms.ElasticTransform(
+                alpha=70.0,
+                sigma=10.0,
+                # fill=128,          # IMPORTANT: match padding to COCO-style background
+            ),
             transforms.ToTensor(),
         ]
         if not no_normalization: 

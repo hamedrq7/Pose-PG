@@ -180,8 +180,8 @@ class COCO_ImageNet_OOD(TrainAuxilary):
             total_running_loss += loss.item()
             num_ood_samples += ood_label.shape[0]
 
-            if step > 1: 
-                break 
+            # if step > 1: 
+            #     break 
 
         self.pose_loss_train_list.append(epoch_info.running_loss / len(self.pose_dl_train))
         self.pose_acc_train_list.append(epoch_info.running_acc / len(self.pose_dl_train))
@@ -255,16 +255,16 @@ class COCO_ImageNet_OOD(TrainAuxilary):
 
                 all_coco_ood_outputs.append(coco_ood_output.detach())
 
-                if step > 1: 
-                    break 
+                # if step > 1: 
+                #     break 
 
             for step, (image, _) in enumerate(tqdm(self.aux_dl_val, desc='ImageNet Validating')): 
                 image = image.to(self.device)
                 imagenet_ood_output, _ = self.model(image)
                 all_imagenet_ood_outputs.append(imagenet_ood_output.detach())
 
-                if step > 1 :
-                    break 
+                # if step > 1 :
+                #     break 
 
             # Process ood outputs
             all_coco_ood_outputs = torch.cat(all_coco_ood_outputs)
