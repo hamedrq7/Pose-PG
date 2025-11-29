@@ -53,6 +53,7 @@ class PoseResNetOOD(nn.Module):
 
         self.ood_head = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten(),
             nn.Linear(256, 1)
         )
 
