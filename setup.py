@@ -105,7 +105,7 @@ imagenet_devkit_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_devkit_
 imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_devkit_t12.tar.gz"
 download_file(imagenet_devkit_url, imagenet_val_path)
 
-if not os.path.exists(f'{imagenet_configs.root}/val'):
+if True: # not os.path.exists(f'{imagenet_configs.root}/val'):
     imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
     imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
     download_file(imagenet_val_url, imagenet_val_path)
