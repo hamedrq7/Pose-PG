@@ -214,7 +214,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
                                             global_step=self.epoch)
 
     def _val(self):
-        epoch_info = COCO_standard_epoch_info(-1, 'val', len(self.ds_val), self.model_nof_joints)
+        epoch_info = COCO_standard_epoch_info(-1, 'val', len(self.pose_ds_val), self.model_nof_joints)
 
         self.model.eval()
 
@@ -232,7 +232,7 @@ class COCO_ImageNet_OOD(TrainAuxilary):
                 if self.flip_test_images:
                     image_flipped = flip_tensor(image, dim=-1)
                     output_flipped = self.model(image_flipped)
-                    output_flipped = flip_back(output_flipped, self.ds_val.flip_pairs)
+                    output_flipped = flip_back(output_flipped, self.pose_ds_val.flip_pairs)
                     coco_pose_output = (coco_pose_output + output_flipped) * 0.5
 
                 poes_loss = self.pose_loss_fn(coco_pose_output, target, target_weight)
