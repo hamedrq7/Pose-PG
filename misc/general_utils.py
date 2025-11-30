@@ -48,36 +48,41 @@ def get_imagenet_loaders(image_resolution, phase: str, no_normalization: bool = 
     elif phase == "train": 
         print('ImageNet Training set, only animals...')
         
-        transform_list = [
-            # 1. Crop a larger area to allow safe rotation
-            transforms.RandomResizedCrop(
-                (int(H * 1.25), int(W * 1.25)),               # larger than final size
-                scale=(0.8, 1.0),
-                ratio=(0.75, 1.33)
-            ),
-            transforms.RandomHorizontalFlip(p=0.5),
-            # 2. Rotate - SAFE because image is larger than final crop
-            transforms.RandomRotation(
-                degrees=45,
-                # fill=128                  # neutral padding
-            ),
-            # 3. Now crop to final COCO size (padding-free)
-            transforms.CenterCrop((H, W)),
-            # 4. Mild scale & translation (affine) like COCO
-            transforms.RandomAffine(
-                degrees=0,
-                scale=(0.85, 1.15),
-                translate=(0.05, 0.05),
-                # fill=128
-            ),
+        # transform_list = [
+        #     # 1. Crop a larger area to allow safe rotation
+        #     transforms.RandomResizedCrop(
+        #         (int(H * 1.25), int(W * 1.25)),               # larger than final size
+        #         scale=(0.8, 1.0),
+        #         ratio=(0.75, 1.33)
+        #     ),
+        #     transforms.RandomHorizontalFlip(p=0.5),
+        #     # 2. Rotate - SAFE because image is larger than final crop
+        #     transforms.RandomRotation(
+        #         degrees=45,
+        #         # fill=128                  # neutral padding
+        #     ),
+        #     # 3. Now crop to final COCO size (padding-free)
+        #     transforms.CenterCrop((H, W)),
+        #     # 4. Mild scale & translation (affine) like COCO
+        #     transforms.RandomAffine(
+        #         degrees=0,
+        #         scale=(0.85, 1.15),
+        #         translate=(0.05, 0.05),
+        #         # fill=128
+        #     ),
 
-            # transforms.ElasticTransform(
-            #     alpha=70.0,
-            #     sigma=10.0,
-            #     # fill=128,          # IMPORTANT: match padding to COCO-style background
-            # ),
+        #     # transforms.ElasticTransform(
+        #     #     alpha=70.0,
+        #     #     sigma=10.0,
+        #     #     # fill=128,          # IMPORTANT: match padding to COCO-style background
+        #     # ),
+        #     transforms.ToTensor(),
+        # ]
+        transform_list = [
+            transforms.Resize((H, W)),   # deterministic resize to model input size
             transforms.ToTensor(),
         ]
+        
         if not no_normalization: 
             transform_list.append(transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
