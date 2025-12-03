@@ -29,10 +29,18 @@
 # python scripts/train_coco_imagenet_ood.py --epochs 3 --log_path '../exps/testin_ood/NoPretrain_RawImageNet-aux_weight-0.001+1warmup' --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood 
 
 ### COCO-Rot-Pred
-python scripts/train_coco_rot.py --aux_loss_weight 0.5 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.5' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+# python scripts/train_coco_rot.py --aux_loss_weight 0.5 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.5' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
 
-python scripts/train_coco_rot.py --aux_loss_weight 0.1 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.1' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+# python scripts/train_coco_rot.py --aux_loss_weight 0.1 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.1' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
 
-python scripts/train_coco_rot.py --aux_loss_weight 0.05 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.05' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+# python scripts/train_coco_rot.py --aux_loss_weight 0.05 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.05' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
 
-python scripts/train_coco_rot.py --aux_loss_weight 0.01 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.01' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+# python scripts/train_coco_rot.py --aux_loss_weight 0.01 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.01' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+
+# python scripts/train_coco_rot.py --aux_loss_weight 0.001 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.001' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+
+# python scripts/train_coco_rot.py --aux_loss_weight 0.005 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.005' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+
+python scripts/train_coco_rot.py --aux_loss_weight 0.0 --epochs 7 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.0' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
+
+python scripts/train_coco_rot.py --aux_loss_weight 0.005 --epochs 30 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION_0.005' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'
