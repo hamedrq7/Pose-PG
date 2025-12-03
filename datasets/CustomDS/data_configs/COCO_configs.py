@@ -245,13 +245,13 @@ def get_rot_pred_pipelines(image_resolution, model_name, rot_factor, no_normaliz
     else:
         udp = False
 
-    SCALE_FACTOR = 0.35
+    SCALE_FACTOR = 0.0 # 0.35
     ###### Train
     train_pipeline = [LoadImageFromFile()]
     train_pipeline.append(TopDownRandomFlip(flip_prob=0.0))
-    train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
+    # train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
     
-    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=rot_factor, scale_factor=SCALE_FACTOR, rot_prob=1.0)) # is rot_factor in degrees? should i pass scale factor? 
+    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=rot_factor, scale_factor=SCALE_FACTOR, rot_prob=1.0, deterministic_rotation=True)) # is rot_factor in degrees? should i pass scale factor? 
     print("is rot_factor in degrees? should i pass scale factor? ")
 
     train_pipeline.append(TopDownAffine(use_udp=udp))

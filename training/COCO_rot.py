@@ -178,7 +178,7 @@ class COCO_rot(TrainAuxilary):
         self.pose_acc_train_list.append(epoch_info.running_acc / len(self.pose_dl_train))
         self.aux_loss_train_list.append(rot_running_loss / len(self.pose_dl_train))
         self.total_loss_train_list.append(total_running_loss / len(self.pose_dl_train))
-        self.ood_acc_train_list.append(rot_running_corrects / num_rot_samples)
+        self.rot_acc_train_list.append(rot_running_corrects / num_rot_samples)
 
         # COCO evaluation
         print('\nTrain AP/AR')
@@ -189,7 +189,7 @@ class COCO_rot(TrainAuxilary):
         self.pose_APs_train_list.append(all_APs)
 
         print(f'Ep{self.epoch} - Train Pose Acc: {self.pose_acc_train_list[-1]:.3f} | Pose Loss: {self.pose_loss_train_list[-1]:.5f} | Pose AP: {self.pose_mAP_train_list[-1]:.3f}')
-        print(f'Train ROT Acc: {self.ood_acc_train_list[-1]:.3f} | ROT Loss: {self.aux_loss_train_list[-1]:.5f} | Total Loss: {self.total_loss_train_list[-1]:.3f}')
+        print(f'Train ROT Acc: {self.rot_acc_train_list[-1]:.3f} | ROT Loss: {self.aux_loss_train_list[-1]:.5f} | Total Loss: {self.total_loss_train_list[-1]:.3f}')
 
         if self.use_tensorboard:
             self.summary_writer.add_scalar('train_loss', self.pose_loss_train_list[-1], # I regard this as Pose 
@@ -203,7 +203,7 @@ class COCO_rot(TrainAuxilary):
                                             global_step=self.epoch)
             self.summary_writer.add_scalar('train_rot_loss', self.aux_loss_train_list[-1],
                                             global_step=self.epoch)
-            self.summary_writer.add_scalar('train_rot_acc', self.ood_acc_train_list[-1],
+            self.summary_writer.add_scalar('train_rot_acc', self.rot_acc_train_list[-1],
                                             global_step=self.epoch)
 
     def _print_conf_mat(self, pred_class, ood_label): 
@@ -227,9 +227,9 @@ class COCO_rot(TrainAuxilary):
         with torch.no_grad():
             for step, (batch_hpe, batch_rot_0, batch_rot_180) in enumerate(tqdm(self.pose_dl_val, desc='COCO Validating')):
                 pose_image, pose_target, pose_target_weight, pose_joints_data = batch_hpe
-                # pose_image = pose_image.to(self.device)
-                # pose_target = pose_target.to(self.device)
-                # pose_target_weight = pose_target_weight.to(self.device)
+                pose_image = pose_image.to(self.device)
+                pose_target = pose_target.to(self.device)
+                pose_target_weight = pose_target_weight.to(self.device)
 
                 _, pose_output = self.model(pose_image)
 
@@ -272,10 +272,12 @@ class COCO_rot(TrainAuxilary):
                 num_rot_samples += rot_label.shape[0]
 
 
-                self._print_conf_mat(pred, rot_label)
+                ### self._print_conf_mat(pred, rot_label)
+                # if step > 1: 
+                #     break 
 
         self.aux_loss_val_list.append(rot_running_loss / len(self.pose_dl_val))
-        self.ood_acc_val_list.append(rot_running_corrects / num_rot_samples)
+        self.rot_acc_val_list.append(rot_running_corrects / num_rot_samples)
         self.pose_loss_val_list.append(epoch_info.running_loss / len(self.pose_dl_val))
         self.pose_acc_val_list.append(epoch_info.running_acc / len(self.pose_dl_val))
         self.total_loss_val_list.append(total_running_loss / len(self.pose_dl_val))
@@ -289,7 +291,7 @@ class COCO_rot(TrainAuxilary):
         self.pose_APs_val_list.append(all_APs)
 
         print(f'Ep{self.epoch} - Val Acc: {self.pose_acc_val_list[-1]:.3f} | Loss: {self.pose_loss_val_list[-1]:.5f} | AP: {self.pose_mAP_val_list[-1]:.3f}')
-        print(f'Val ROT Acc: {self.ood_acc_val_list[-1]:.3f} | ROT Loss: {self.aux_loss_val_list[-1]:.5f} | Total Loss: {self.total_loss_val_list[-1]:.3f}')
+        print(f'Val ROT Acc: {self.rot_acc_val_list[-1]:.3f} | ROT Loss: {self.aux_loss_val_list[-1]:.5f} | Total Loss: {self.total_loss_val_list[-1]:.3f}')
 
         if self.use_tensorboard:
             self.summary_writer.add_scalar('val_loss', self.pose_loss_val_list[-1],
@@ -303,5 +305,5 @@ class COCO_rot(TrainAuxilary):
                                             global_step=self.epoch)
             self.summary_writer.add_scalar('val_rot_loss', self.aux_loss_val_list[-1],
                                             global_step=self.epoch)
-            self.summary_writer.add_scalar('val_rot_acc', self.ood_acc_val_list[-1],
+            self.summary_writer.add_scalar('val_rot_acc', self.rot_acc_val_list[-1],
                                             global_step=self.epoch)

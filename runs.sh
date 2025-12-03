@@ -29,4 +29,4 @@
 # python scripts/train_coco_imagenet_ood.py --epochs 3 --log_path '../exps/testin_ood/NoPretrain_RawImageNet-aux_weight-0.001+1warmup' --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood 
 
 ### COCO-Rot-Pred
-python scripts/train_coco_rot.py --device 'cpu' --aux_loss_weight 0.5 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 0 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION' --model_name 'poseresnet_ood' # --pretrained_weight_path './downloads/standard_resnet50.pth'
+python scripts/train_coco_rot.py --aux_loss_weight 0.5 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 0 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION' --model_name 'poseresnet_ood' --pretrained_weight_path './downloads/standard_resnet50.pth'

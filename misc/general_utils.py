@@ -113,8 +113,8 @@ def get_rotation_coco(image_resolution, model_name, phase: str, test_mode: bool,
 
     if phase == 'train': 
         ds_train = TopDownCocoDataset(
-            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json',
-            img_prefix=f'{COCO_configs.COCO_data_root}/train2017/',
+            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json', # 
+            img_prefix=f'{COCO_configs.COCO_data_root}/train2017/', # 
             data_cfg=COCO_configs.get_data_cfg(image_resolution=image_resolution),
             pipeline=hpe_tr_ppl,
             dataset_info=COCO_configs.COCO_dataset_info,

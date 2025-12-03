@@ -264,6 +264,7 @@ class TopDownRandomFlip:
         # A flag indicating whether the image is flipped,
         # which can be used by child class.
         flipped = False
+
         if np.random.rand() <= self.flip_prob or force_the_flip:
             flipped = True
             img = img[:, ::-1, :]
@@ -277,7 +278,6 @@ class TopDownRandomFlip:
         results['joints_3d_visible'] = joints_3d_visible
         results['center'] = center
         results['flipped'] = flipped
-
         return results
     
 class TopDownHalfBodyTransform:
@@ -369,10 +369,11 @@ class TopDownGetRandomScaleRotation:
         rot_prob (float): Probability of random rotation.
     """
 
-    def __init__(self, rot_factor=40, scale_factor=0.5, rot_prob=0.6):
+    def __init__(self, rot_factor=40, scale_factor=0.5, rot_prob=0.6, deterministic_rotation = False):
         self.rot_factor = rot_factor
         self.scale_factor = scale_factor
         self.rot_prob = rot_prob
+        self.deterministic_rotation = deterministic_rotation
 
     def __call__(self, results):
         """Perform data augmentation with random scaling & rotating."""
@@ -385,6 +386,8 @@ class TopDownGetRandomScaleRotation:
         s = s * s_factor
 
         r_factor = np.clip(np.random.randn() * rf, -rf * 2, rf * 2)
+        if self.deterministic_rotation: 
+            r_factor = rf
         r = r_factor if np.random.rand() <= self.rot_prob else 0
 
         results['scale'] = s
@@ -1087,6 +1090,7 @@ class Collect:
         # print('data')
         # for k in data.keys():
         #     print(k, type(data[k]))
+        # print(results.keys())
 
         # return data
         return data['img'], data['target'].astype(np.float32), data['target_weight'].astype(np.float32), {
@@ -1100,7 +1104,7 @@ class Collect:
             'rotation': meta['rotation'],
             'score': meta['bbox_score'], # ? 
             'bbox_id': meta['bbox_id'],
-            'flipped': results['flipped']
+            'flipped': False if 'flipped' not in results.keys() else results['flipped']
         }
 
     def __repr__(self):

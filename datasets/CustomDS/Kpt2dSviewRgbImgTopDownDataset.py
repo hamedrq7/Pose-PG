@@ -210,7 +210,7 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
         if not self.other_pipelines is None: 
             assert isinstance(self.other_pipelines, list), 'Pass a list of auxilary pipelines'
             aux_pipelines = []
-            for p in self.self.other_pipelines: 
+            for p in self.other_pipelines: 
                 aux_pipelines.append(Compose(p))
             self.other_pipelines = aux_pipelines
             print('Dataloader has a second pipeline, meaning it will output double the data')
@@ -386,16 +386,19 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
         # print(results.keys())
         results['ann_info'] = self.ann_info
 
+
         temp_results = copy.deepcopy(results)
         if self.other_pipelines is None: 
             return self.pipeline(results) #@#
         else:
             hpe_input = self.pipeline(results)
             is_hpe_input_flipped = hpe_input[3]['flipped']
+
             other_outs = []
             for pipeline in self.other_pipelines:
                 temp_temp_results = copy.deepcopy(temp_results)
                 other_outs.append(pipeline(temp_temp_results, extra_rules = 'do_flip' if is_hpe_input_flipped else None))
+
 
             return hpe_input, *other_outs
         

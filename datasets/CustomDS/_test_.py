@@ -3,7 +3,68 @@ import os
 sys.path.insert(1, os.getcwd())
 
 from torch.utils.data import DataLoader
-from misc.general_utils import get_coco_loaders
+from misc.general_utils import get_coco_loaders, get_rotation_coco
+
+
+### 
+ds_val = get_rotation_coco(image_resolution=[256, 192], model_name='poseresnet',
+                            phase="train", test_mode=False, no_normalization = True) # test_mode should not be false here
+dl = DataLoader(ds_val, batch_size=2)
+
+import matplotlib.pyplot as plt
+import os
+import torch
+
+save_dir = "saved_batches"
+os.makedirs(save_dir, exist_ok=True)
+
+max_steps = 10  # stop after this many batches
+column_titles = ["HPE", "0-deg", "180-deg"]
+
+for step, (batch_hpe, batch_rot_0, batch_rot_180) in enumerate(dl):
+    if step >= max_steps:
+        break
+
+    B = 2
+    assert B == 2, "Code assumes batch size = 2"
+
+    X1, _, _, _ = batch_hpe
+    X2, _, _, _ = batch_rot_0
+    X3, _, _, _ = batch_rot_180
+    
+    # Stack into [B, 3, C, H, W]
+    batch = torch.stack([X1, X2, X3], dim=1)
+
+    fig, axes = plt.subplots(nrows=B, ncols=3, figsize=(9, 6))
+    for col in range(3):
+            axes[0, col].set_title(column_titles[col], fontsize=14)
+
+    for i in range(B):
+        for j in range(3):
+            img = batch[i, j]
+
+            # CHW → HWC for plotting
+            img = img.permute(1, 2, 0).cpu()
+
+            # Handle grayscale images
+            if img.shape[-1] == 1:
+                img = img.squeeze(-1)
+                axes[i, j].imshow(img, cmap="gray")
+            else:
+                axes[i, j].imshow(img)
+
+            axes[i, j].axis("off")
+
+    plt.tight_layout()
+
+    # ---- Save to file ----
+    filename = os.path.join(save_dir, f"batch_{step}.png")
+    plt.savefig(filename, dpi=150)
+    plt.close(fig)
+
+    print(f"Saved: {filename}")
+
+exit()
 
 
 
