@@ -144,7 +144,8 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
                  pipeline,
                  dataset_info=None,
                  coco_style=True,
-                 test_mode=False):
+                 test_mode=False,
+                 other_pipelines=None):
 
         self.image_info = {}
         self.ann_info = {}
@@ -152,6 +153,7 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
         self.ann_file = ann_file
         self.img_prefix = img_prefix
         self.pipeline = pipeline #@#
+        self.other_pipelines = other_pipelines
         self.test_mode = test_mode
 
         self.ann_info['image_size'] = np.array(data_cfg['image_size'])
@@ -205,7 +207,16 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
         self.db = []
 
         self.pipeline = Compose(self.pipeline) #@#
-
+        if not self.other_pipelines is None: 
+            assert isinstance(self.other_pipelines, list), 'Pass a list of auxilary pipelines'
+            aux_pipelines = []
+            for p in self.self.other_pipelines: 
+                aux_pipelines.append(Compose(p))
+            self.other_pipelines = aux_pipelines
+            print('Dataloader has a second pipeline, meaning it will output double the data')
+        else:
+            print('Single branch dataloader')
+        
     @staticmethod
     def _get_mapping_id_name(imgs):
         """
@@ -374,8 +385,20 @@ class Kpt2dSviewRgbImgTopDownDataset(Dataset, metaclass=ABCMeta):
         results = copy.deepcopy(self.db[idx])
         # print(results.keys())
         results['ann_info'] = self.ann_info
-        return self.pipeline(results) #@#
 
+        temp_results = copy.deepcopy(results)
+        if self.other_pipelines is None: 
+            return self.pipeline(results) #@#
+        else:
+            hpe_input = self.pipeline(results)
+            is_hpe_input_flipped = hpe_input[3]['flipped']
+            other_outs = []
+            for pipeline in self.other_pipelines:
+                temp_temp_results = copy.deepcopy(temp_results)
+                other_outs.append(pipeline(temp_temp_results, extra_rules = 'do_flip' if is_hpe_input_flipped else None))
+
+            return hpe_input, *other_outs
+        
     def _sort_and_unique_bboxes(self, kpts, key='bbox_id'):
         """sort kpts and remove the repeated ones."""
         kpts = sorted(kpts, key=lambda x: x[key])

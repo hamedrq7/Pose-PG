@@ -60,7 +60,8 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
                  pipeline,
                  dataset_info=None,
                  test_mode=False,
-                 indicies=None):
+                 indicies=None,
+                 other_pipelines=None):
 
         super().__init__(
             ann_file,
@@ -68,7 +69,8 @@ class TopDownCocoDataset(Kpt2dSviewRgbImgTopDownDataset):
             data_cfg,
             pipeline,
             dataset_info=dataset_info,
-            test_mode=test_mode)
+            test_mode=test_mode,
+            other_pipelines=other_pipelines)
 
         self.skipped = 0
         self.use_gt_bbox = data_cfg['use_gt_bbox']

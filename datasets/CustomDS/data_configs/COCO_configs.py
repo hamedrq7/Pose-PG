@@ -238,7 +238,62 @@ def get_data_cfg(image_resolution):
 
     return COCO_data_cfg
 
-def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
+def get_rot_pred_pipelines(image_resolution, model_name, rot_factor, no_normalization: bool = False, ):
+    data_cfg = get_data_cfg(image_resolution)
+    if model_name == 'vitpose_small':
+        udp = True
+    else:
+        udp = False
+
+    SCALE_FACTOR = 0.35
+    ###### Train
+    train_pipeline = [LoadImageFromFile()]
+    train_pipeline.append(TopDownRandomFlip(flip_prob=0.0))
+    train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
+    
+    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=rot_factor, scale_factor=SCALE_FACTOR, rot_prob=1.0)) # is rot_factor in degrees? should i pass scale factor? 
+    print("is rot_factor in degrees? should i pass scale factor? ")
+
+    train_pipeline.append(TopDownAffine(use_udp=udp))
+    train_pipeline.append(ToTensor())
+    if not no_normalization: 
+        train_pipeline.append(NormalizeTensor(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]))
+    train_pipeline.append(TopDownGenerateTarget(sigma=data_cfg['heatmap_sigma'], encoding='UDP' if udp else 'MSRA')) 
+    train_pipeline.append(Collect(
+        keys=['img', 'target', 'target_weight'],
+        meta_keys=[
+            'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
+            'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
+        ]
+    ))
+
+    ###### Val
+    val_pipeline = [LoadImageFromFile()]
+    val_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=rot_factor, scale_factor=SCALE_FACTOR, rot_prob=1.0))
+    val_pipeline.append(TopDownAffine(use_udp=udp))
+    val_pipeline.append(ToTensor())
+    if not no_normalization:
+        val_pipeline.append(NormalizeTensor(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+            ))
+    val_pipeline.append(TopDownGenerateTarget(sigma=data_cfg['heatmap_sigma'], encoding='UDP' if udp else 'MSRA')) #### [?] 
+    val_pipeline.append(Collect(
+        keys=['img', 'target', 'target_weight'],
+        meta_keys=[
+            'img_id', 'image_file', 'joints_3d', 'joints_3d_visible', 'center', 'scale',
+            'rotation', 'bbox_score', 'flip_pairs', 'bbox_id'
+        ]
+    ))
+
+
+    test_pipeline = val_pipeline
+
+    return train_pipeline, val_pipeline, test_pipeline
+
+def get_pipelines(image_resolution, model_name, no_normalization: bool = False,):
     data_cfg = get_data_cfg(image_resolution)
 
     # if model_name == 'poseresnet' or model_name == 'hrnet' or model_name == "poseresnet_sodef":
@@ -249,12 +304,13 @@ def get_pipelines(image_resolution, model_name, no_normalization: bool = False):
         udp = True
     else:
         udp = False
-        
+
     ###### Train
     train_pipeline = [LoadImageFromFile()]
     train_pipeline.append(TopDownRandomFlip(flip_prob=0.5))
     train_pipeline.append(TopDownHalfBodyTransform(num_joints_half_body=8, prob_half_body=0.3))
-    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35))
+    
+    train_pipeline.append(TopDownGetRandomScaleRotation(rot_factor=45., scale_factor=0.35,))
     train_pipeline.append(TopDownAffine(use_udp=udp))
     train_pipeline.append(ToTensor())
     if not no_normalization: 

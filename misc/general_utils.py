@@ -101,9 +101,40 @@ def get_imagenet_loaders(image_resolution, phase: str, no_normalization: bool = 
 
         return train_ds
 
+def get_rotation_coco(image_resolution, model_name, phase: str, test_mode: bool, no_normalization: bool = False, ): 
+    rotations = [0., 180.]
+    import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
+    from datasets.CustomDS.COCODataset import TopDownCocoDataset
 
+    tr_ppl_0, val_ppl_0, te_ppl_0 = COCO_configs.get_rot_pred_pipelines(image_resolution=image_resolution, model_name=model_name, rot_factor=rotations[0], no_normalization=no_normalization)
+    tr_ppl_180, val_ppl_180, te_ppl_180 = COCO_configs.get_rot_pred_pipelines(image_resolution=image_resolution, model_name=model_name, rot_factor=rotations[1], no_normalization=no_normalization)
 
-def get_coco_loaders(image_resolution, model_name, phase: str, test_mode: bool, no_normalization: bool = False):
+    hpe_tr_ppl, hpe_val_ppl, hpe_te_ppl = COCO_configs.get_pipelines(image_resolution=image_resolution, model_name=model_name, no_normalization=no_normalization)
+
+    if phase == 'train': 
+        ds_train = TopDownCocoDataset(
+            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_train2017.json',
+            img_prefix=f'{COCO_configs.COCO_data_root}/train2017/',
+            data_cfg=COCO_configs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=hpe_tr_ppl,
+            dataset_info=COCO_configs.COCO_dataset_info,
+            test_mode=test_mode, 
+            other_pipelines = [tr_ppl_0, tr_ppl_180]
+        )
+        return ds_train
+    elif phase == "val": 
+        ds_val = TopDownCocoDataset(
+            ann_file=f'{COCO_configs.COCO_data_root}/annotations/person_keypoints_val2017.json',
+            img_prefix=f'{COCO_configs.COCO_data_root}/val2017/',
+            data_cfg=COCO_configs.get_data_cfg(image_resolution=image_resolution),
+            pipeline=hpe_val_ppl,
+            dataset_info=COCO_configs.COCO_dataset_info,
+            test_mode=test_mode,  
+            other_pipelines = [val_ppl_0, val_ppl_180]
+        )
+        return ds_val
+
+def get_coco_loaders(image_resolution, model_name, phase: str, test_mode: bool, no_normalization: bool = False, ):
     import datasets.CustomDS.data_configs.COCO_configs as COCO_configs
     from datasets.CustomDS.COCODataset import TopDownCocoDataset
 
@@ -228,6 +259,8 @@ def get_loss_fn(loss: str, device, use_target_weight=True):
         loss_fn = JointsOHKMMSELoss(use_target_weight).to(device)
     elif loss == 'BCE':
         loss_fn = nn.BCEWithLogitsLoss()
+    elif loss == 'CE':
+        loss_fn = nn.CrossEntropyLoss()
     else:
         raise NotImplementedError
     return loss_fn

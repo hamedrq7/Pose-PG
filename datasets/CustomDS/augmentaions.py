@@ -254,7 +254,7 @@ class TopDownRandomFlip:
     def __init__(self, flip_prob=0.5):
         self.flip_prob = flip_prob
 
-    def __call__(self, results):
+    def __call__(self, results, force_the_flip = False):
         """Perform data augmentation with random image flip."""
         img = results['img']
         joints_3d = results['joints_3d']
@@ -264,7 +264,7 @@ class TopDownRandomFlip:
         # A flag indicating whether the image is flipped,
         # which can be used by child class.
         flipped = False
-        if np.random.rand() <= self.flip_prob:
+        if np.random.rand() <= self.flip_prob or force_the_flip:
             flipped = True
             img = img[:, ::-1, :]
             joints_3d, joints_3d_visible = fliplr_joints(
@@ -409,7 +409,7 @@ class TopDownAffine:
         self.use_udp = use_udp
 
     def __call__(self, results):
-        image_size = results['ann_info']['image_size']
+        image_size = results['ann_info']['image_size'] # [H, W] like 256, 192 .... this is not the original size of the image
 
         img = results['img']
         joints_3d = results['joints_3d']
@@ -849,7 +849,7 @@ class Compose:
                 raise TypeError('transform must be callable, but got'
                                 f' {type(transform)}')
 
-    def __call__(self, data):
+    def __call__(self, data, extra_rules: str = None): 
         """Call function to apply transforms sequentially.
 
         Args:
@@ -859,8 +859,12 @@ class Compose:
             dict: Transformed data.
         """
         # print(data.keys())
+        
         for t in self.transforms:
-            data = t(data)
+            if isinstance(t, TopDownRandomFlip): 
+                data = t(data, force_the_flip=(extra_rules == 'do_flip')) 
+            else: 
+                data = t(data)
             if data is None:
                 return None
         return data
@@ -1095,7 +1099,8 @@ class Collect:
             'joints_visibility': meta['joints_3d_visible'], # ? 
             'rotation': meta['rotation'],
             'score': meta['bbox_score'], # ? 
-            'bbox_id': meta['bbox_id']
+            'bbox_id': meta['bbox_id'],
+            'flipped': results['flipped']
         }
 
     def __repr__(self):

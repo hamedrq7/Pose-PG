@@ -180,7 +180,10 @@ class Train(object):
             self.optim = SGD(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay,
                              momentum=self.momentum, nesterov=self.nesterov)
         elif optimizer == 'Adam':
-            self.optim = Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            self.optim = Adam(self.model.parameters(), 
+                              lr=self.lr, 
+                              weight_decay=self.weight_decay,
+                              )
         else:
             raise NotImplementedError
 

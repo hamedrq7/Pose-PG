@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision
-import ffmpeg
+# import ffmpeg
 
 
 def joints_dict():

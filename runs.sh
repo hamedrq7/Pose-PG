@@ -3,8 +3,10 @@
 # python scripts/train_coco.py --batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path ../exps/UsingMyCustomDataset_AndOtherSetting_Madry_adversarial_eps4 --model_name poseresnet --pretrained_weight_path './downloads/madry_adversarial_resnet50_linf4.pt'
 # python scripts/train_coco.py --batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/UsingMyCustomDataset_AndOtherSetting_Madry_adversarial_l2_eps0.05' --model_name poseresnet --pretrained_weight_path './downloads/resnet50_l2_eps0.05.ckpt'
 
-# with wd it doesnt converge whyyyy? (upto epoch 10-ish)
-# python scripts/train_coco.py --batch_size 16 --weight_decay 0.0001 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/StandardPoseResnet_default_setting' --model_name 'poseresnet' --pretrained_weight_path './downloads/standard_resnet50.pth'
+# with wd it doesnt converge whyyyy? (upto epoch 10-ish) ----> its expected, no bug on my behalf
+# # python scripts/train_coco.py --batch_size 16 --weight_decay 0.0001 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/StandardPoseResnet_default_setting' --model_name 'poseresnet' --pretrained_weight_path './downloads/standard_resnet50.pth'
+
+# python scripts/train_coco.py --batch_size 32 --weight_decay 0.0001 --lr 0.001 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/StandardPoseResnet_default_setting_WD_0.0001' --model_name 'poseresnet' --pretrained_weight_path './downloads/standard_resnet50.pth'
 
 # Benchmarking PGD acc
 # python scripts/test_coco_robustness.py --batch_size 16 --model_c 50 --model_name poseresnet --pretrained_weight_path '/mnt/data/hossein/Hossein_workspace/nips_cetra/hamed/exps/UsingMyCustomDataset_AndOtherSetting_Madry_adversarial_eps8_R50_Sigma2/20251029_1721/checkpoint_best_mAP.pth'
@@ -24,5 +26,7 @@
 
 # COCO_ImageNet OOD 
 ### python scripts/train_coco_imagenet_ood.py --log_path '../exps/COCO-ImageNet-OOD-aux_weight-0.001+1warmup' --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood --pretrained_weight_path './downloads/standard_resnet50.pth'
-python scripts/train_coco_imagenet_ood.py --epochs 3 --log_path '../exps/testin_ood/NoPretrain_RawImageNet-aux_weight-0.001+1warmup' --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood 
+# python scripts/train_coco_imagenet_ood.py --epochs 3 --log_path '../exps/testin_ood/NoPretrain_RawImageNet-aux_weight-0.001+1warmup' --aux_loss_weight 0.001 --pose_batch_size 16 --aux_batch_size 16 --weight_decay 0.0 --num_workers 8 --model_c 50 --image_resolution '(256, 192)' --model_name poseresnet_ood 
 
+### COCO-Rot-Pred
+python scripts/train_coco_rot.py --device 'cpu' --aux_loss_weight 0.5 --pose_batch_size 16 --aux_batch_size 0 --weight_decay 0.0 --num_workers 0 --model_c 50 --image_resolution '(256, 192)' --log_path '../exps/TESTINROTATIONPREDICTION' --model_name 'poseresnet_ood' # --pretrained_weight_path './downloads/standard_resnet50.pth'
