@@ -16,5 +16,5 @@
 # python scripts/test_coco_robustness.py --log_path '../exps/vitpose_small' --pretrained_weight_path './downloads/vitpose_small.pth' --model_name 'vitpose_small' --exp_name 'testpgd - val with gt boxes' --num_workers 8 
 
 
-python scripts/test_coco.py --model_c 50 --model_nof_joints 17 --log_path '../exps/COCO-Rotation-Prediction/aux_weight_0.001/20251203_1039' --pretrained_weight_path '../exps/COCO-Rotation-Prediction/aux_weight_0.001/20251203_1039/checkpoint_best_mAP.pth' --model_name 'poseresnet_ood' --exp_name 'testcoco - detector bboxes' --num_workers 8 
+python scripts/test_coco.py --model_c 50 --model_nof_joints 17 --log_path '../exps/COCO-Rotation-Prediction/aux_weight_0.001/20251203_1039' --pretrained_weight_path '../exps/COCO-Rotation-Prediction/aux_weight_0.001/20251203_1039/checkpoint_best_pose_mAP.pth' --model_name 'poseresnet_ood' --exp_name 'testcoco - detector bboxes' --num_workers 8 
 
