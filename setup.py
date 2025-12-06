@@ -51,11 +51,11 @@ if not os.path.exists(coco_val_extract_dir):
 else:
     print(f"Skipping unzip — found existing directory: {coco_val_extract_dir}")
 
-# download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
-# if not os.path.exists(coco_train_extract_dir):
-#     run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
-# else:
-#     print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
+download_file("http://images.cocodataset.org/zips/train2017.zip", coco_train_zip)
+if not os.path.exists(coco_train_extract_dir):
+    run(f"unzip -q -n {coco_train_zip} -d ./datasets/COCO")
+else:
+    print(f"Skipping unzip — found existing directory: {coco_train_extract_dir}")
 
 download_file("http://images.cocodataset.org/annotations/annotations_trainval2017.zip", coco_annotation)
 if not os.path.exists(coco_annotation_extract_dir):
@@ -98,24 +98,24 @@ gdown_download('https://drive.google.com/uc?id=1ygw57X-mh0QBfENB-U5DsuSauGIu-8RB
 # gdown_download('https://drive.google.com/uc?id=13KU2xifSerWCTrJHfbCxoD_BD3zVxiOl', './datasets/CrowdPose/annotations/det_for_crowd_test_0.1_0.5.json')
 
 ########################################  ImageNet  ########################################
-import datasets.CustomDS.data_configs.ImageNet_configs as imagenet_configs
-os.makedirs(f"{imagenet_configs.root}", exist_ok=True)
+# import datasets.CustomDS.data_configs.ImageNet_configs as imagenet_configs
+# os.makedirs(f"{imagenet_configs.root}", exist_ok=True)
 
-imagenet_devkit_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_devkit_t12.tar.gz"
-imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_devkit_t12.tar.gz"
-download_file(imagenet_devkit_url, imagenet_val_path)
+# imagenet_devkit_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_devkit_t12.tar.gz"
+# imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_devkit_t12.tar.gz"
+# download_file(imagenet_devkit_url, imagenet_val_path)
 
-if not os.path.exists(f'{imagenet_configs.root}/val'):
-    imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
-    imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
-    download_file(imagenet_val_url, imagenet_val_path)
-    results = imagenet_configs.unzip_imagenet_val()
-    print('Unzipped ImageNet Val, status: ', results)
-    if results == True: 
-        print('Deleting zip files')
-        os.remove(imagenet_val_path)
-else:
-    print(f'{imagenet_configs.root}/val exits, skipping download and unzip')
+# if not os.path.exists(f'{imagenet_configs.root}/val'):
+#     imagenet_val_url = "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar"
+#     imagenet_val_path = f"{imagenet_configs.root}/ILSVRC2012_img_val.tar"
+#     download_file(imagenet_val_url, imagenet_val_path)
+#     results = imagenet_configs.unzip_imagenet_val()
+#     print('Unzipped ImageNet Val, status: ', results)
+#     if results == True: 
+#         print('Deleting zip files')
+#         os.remove(imagenet_val_path)
+# else:
+#     print(f'{imagenet_configs.root}/val exits, skipping download and unzip')
 
 # if not os.path.exists(f'{imagenet_configs.root}/train'):
 #     imagenet_train_url = "https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar"
