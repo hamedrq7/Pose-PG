@@ -245,7 +245,7 @@ def get_rot_pred_pipelines(image_resolution, model_name, rot_factor, no_normaliz
     else:
         udp = False
 
-    SCALE_FACTOR = 0.0 # 0.35
+    SCALE_FACTOR = 0.2 # 0.35
     ###### Train
     train_pipeline = [LoadImageFromFile()]
     train_pipeline.append(TopDownRandomFlip(flip_prob=0.0))
